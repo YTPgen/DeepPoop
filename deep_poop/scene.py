@@ -20,4 +20,4 @@ class Scene:
         self.subscenes = subscenes
 
     def length(self):
-        return end - start
+        return self.end - self.start
