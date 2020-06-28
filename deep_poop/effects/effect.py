@@ -1,11 +1,10 @@
 import numpy as np
 from enum import Enum
 import random
+import abc
+
 import cv2
-
 from moviepy.editor import VideoClip, ImageSequenceClip
-
-import ytp_effects
 
 
 class EffectType(Enum):
@@ -22,8 +21,6 @@ class EffectLengthDistribution(Enum):
 class Effect:
     def __init__(
         self,
-        name: str,
-        function: "function",
         intensity: float,
         effect_type: EffectType,
         min_len: float = 0,
@@ -31,8 +28,6 @@ class Effect:
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
     ):
-        self.name = name
-        self.effect_function = function
         self.intensity = intensity
         self.type = effect_type
         self.min_len = min_len
@@ -52,13 +47,14 @@ class Effect:
         print("Warning: Defaulting to random effect length")
         return random.uniform(min_len, max_len)
 
+    @abc.abstractmethod
     def apply(self, video: VideoClip):
         return self.effect_function(video)
 
 
 class ImageEffect(Effect):
     def __init__(self, *args, **kwargs):
-        super(ImageEffect, self).__init__(**kwargs)
+        super(ImageEffect, self).__init__(*args, **kwargs)
 
     def apply(self, video: VideoClip):
         output_frames = []
@@ -70,27 +66,19 @@ class ImageEffect(Effect):
         output_video.audio = video.audio
         return output_video
 
+    @abc.abstractmethod
     def apply_frame(self, frame: np.ndarray):
-        return self.effect_function(frame)
+        pass
 
 
-effects = [
-    Effect(
-        name="scramble",
-        function=ytp_effects.video.scramble.scramble,
-        intensity=400,
-        effect_type=EffectType.VIDEO,
-        max_len=1.5,
-        length_distribution=EffectLengthDistribution.RANDOM,
-        can_cut=True,
-    ),
-    ImageEffect(
-        name="invert",
-        function=ytp_effects.image.color.invert,
-        intensity=1,
-        effect_type=EffectType.IMAGE,
-        max_len=2.5,
-        length_distribution=EffectLengthDistribution.RANDOM,
-    ),
-]
+# effects = [
+#     ImageEffect(
+#         name="invert",
+#         function=ytp_effects.image.color.invert,
+#         intensity=1.5,
+#         effect_type=EffectType.IMAGE,
+#         max_len=2.5,
+#         length_distribution=EffectLengthDistribution.RANDOM,
+#     ),
+# ]
 

@@ -4,7 +4,8 @@ import random
 from moviepy.editor import VideoClip
 
 from deep_poop.scene import Scene
-from deep_poop.effects import effects, Effect
+from deep_poop.effects.effect import Effect
+from deep_poop.effect_list import EFFECTS
 
 
 class EffectApplier:
@@ -26,7 +27,7 @@ class EffectApplier:
                 video = video.subclip(0, scene_length)
                 self.intensity += scene_length * effect.intensity
                 self.intensity -= scene_length
-                print(f"INFO: Applied {effect.name}")
+                print(f"INFO: Applied {effect.__class__.__name__}")
                 return effect.apply(video)
         else:
             print(f"DEBBUG: Skipped applying effect")
@@ -47,7 +48,7 @@ class EffectApplier:
         return True
 
     def usable_effects(self, scene_length: float):
-        return [e for e in effects if self.can_apply(e, scene_length)]
+        return [e for e in EFFECTS if self.can_apply(e, scene_length)]
 
     def select_effect(self, effects: List[Effect]):
         return random.choice(effects)
