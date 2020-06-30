@@ -35,6 +35,11 @@ class Effect:
         self.can_cut = can_cut
         self.length_distribution = length_distribution
 
+    def initialize_effect(self):
+        """Any initialization that needs to take place when effect is used.
+        """
+        pass
+
     def effect_length(self, max_len: float):
         max_len = min(self.max_len, max_len)
         min_len = self.min_len
@@ -47,16 +52,25 @@ class Effect:
         print("Warning: Defaulting to random effect length")
         return random.uniform(min_len, max_len)
 
+    def apply(self):
+        self.initialize_effect()
+        self.effect_function()
+
     @abc.abstractmethod
-    def apply(self, video: VideoClip):
-        return self.effect_function(video)
+    def effect_function(self, video: VideoClip):
+        """Functionality when effect is applied. To be implemented by each effect.
+
+        Args:
+            video (VideoClip): Video to apply effect on
+        """
+        pass
 
 
 class ImageEffect(Effect):
     def __init__(self, *args, **kwargs):
         super(ImageEffect, self).__init__(*args, **kwargs)
 
-    def apply(self, video: VideoClip):
+    def effect_function(self, video: VideoClip):
         output_frames = []
         for t, video_frame in video.iter_frames(with_times=True):
             video_frame = cv2.cvtColor(video_frame, cv2.COLOR_RGB2BGR)

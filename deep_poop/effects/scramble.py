@@ -21,7 +21,7 @@ class Scramble(effect.Effect):
         self.unique_scramble = unique_scramble
         self.scramble_frame_length = scramble_frame_length
 
-    def apply(self, video: VideoClip):
+    def effect_function(self, video: VideoClip):
         cut_clip = CutClip(video)
 
         scrambled_frames = []

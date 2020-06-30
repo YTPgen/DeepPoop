@@ -19,7 +19,7 @@ class Echo(effect.Effect):
         self.delay = delay
         self.strength = strength
 
-    def apply(self, video: VideoClip):
+    def effect_function(self, video: VideoClip):
         audio = video.audio
         audio_frames = utils.audio_to_frames(audio)
         d = int(audio.fps * self.delay)
