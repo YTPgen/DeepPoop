@@ -52,9 +52,9 @@ class Effect:
         print("Warning: Defaulting to random effect length")
         return random.uniform(min_len, max_len)
 
-    def apply(self):
+    def apply(self, video: VideoClip):
         self.initialize_effect()
-        self.effect_function()
+        self.effect_function(video)
 
     @abc.abstractmethod
     def effect_function(self, video: VideoClip):
@@ -63,7 +63,7 @@ class Effect:
         Args:
             video (VideoClip): Video to apply effect on
         """
-        pass
+        raise NotImplementedError
 
 
 class ImageEffect(Effect):
