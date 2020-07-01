@@ -26,4 +26,11 @@ EFFECTS = [
         max_len=4,
         length_distribution=EffectLengthDistribution.RANDOM,
     ),
+    effects.Rotate(
+        speed=3,
+        center_on_face=False,
+        intensity=1.4,
+        max_len=2,
+        length_distribution=EffectLengthDistribution.RANDOM,
+    ),
 ]

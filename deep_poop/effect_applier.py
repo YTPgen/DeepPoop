@@ -1,5 +1,6 @@
 from typing import List
 import random
+import copy
 
 from moviepy.editor import VideoClip
 
@@ -16,23 +17,27 @@ class EffectApplier:
     def skip_effect(self):
         return random.random() < self.intensity / self.max_intensity
 
-    def apply_effects(self, video: VideoClip, scene: Scene):
-        scene_length = scene.length() / video.fps
+    def apply_effects(self, scene: Scene):
+        scene_length = scene.length()
         if not self.skip_effect():
             usable_effects = self.usable_effects(scene_length)
             # TODO: Change to use multiple effects at same time
             if usable_effects != []:
                 effect = self.select_effect(usable_effects)
+                original_clip = scene.clip
                 scene_length = self.get_effect_length(effect, scene_length)
-                video = video.subclip(0, scene_length)
+                scene.clip = scene.clip.subclip(0, scene_length)
+                print(f"INFO: Applied {effect.__class__.__name__}")
+                transformed_clip = effect.apply(scene)
+                scene.clip = original_clip
                 self.intensity += scene_length * effect.intensity
                 self.intensity -= scene_length
-                print(f"INFO: Applied {effect.__class__.__name__}")
-                return effect.apply(video)
-        else:
-            print(f"DEBBUG: Skipped applying effect")
-            self.intensity -= scene_length
-            return video
+                if transformed_clip is None:
+                    raise ValueError
+                return transformed_clip
+        print(f"DEBUG: Skipped applying effect")
+        self.intensity -= scene_length
+        return scene.clip
 
     def can_apply(self, effect: Effect, scene_length: float):
         total_intensity = scene_length * effect.intensity

@@ -68,10 +68,10 @@ class Generator:
                 until_subscene += 1
 
             subscenes = current_scene.subscenes[from_subscene:until_subscene]
-            for s in subscenes:
-                subscene_clip = video.subclip(s.start / video.fps, s.end / video.fps)
+            for subscene in subscenes:
+                subscene.analyze_frames()
                 print(f"Applying effect at {total_duration}")
-                new_clip = self._effect_applier.apply_effects(subscene_clip, s)
+                new_clip = self._effect_applier.apply_effects(subscene)
                 ytp_clips.append(new_clip)
                 total_duration += new_clip.duration
         output_video = concatenate_videoclips(ytp_clips)

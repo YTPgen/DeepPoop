@@ -2,12 +2,15 @@ import numpy as np
 
 from moviepy.editor import VideoClip
 import cv2
+from face_feature_recognizer.face import Face
 
 import deep_poop.effects.effect as effect
 import deep_poop.effects.utils as utils
+from deep_poop.clips.cut_clip import FullFrame
+from deep_poop.scene import Scene
 
 
-class Pixelate(effect.ImageEffect):
+class Rotate(effect.ImageEffect):
     """Pixelates images in a video.
 
     Args:
@@ -17,7 +20,7 @@ class Pixelate(effect.ImageEffect):
 
     def __init__(self, speed: float, center_on_face: bool = False, *args, **kwargs):
         kwargs["effect_type"] = effect.EffectType.IMAGE
-        super(Pixelate, self).__init__(*args, **kwargs)
+        super(Rotate, self).__init__(*args, **kwargs)
         self.speed = speed
         self.center_on_face = center_on_face
         # TODO: Consider adding scale up/down
@@ -26,12 +29,15 @@ class Pixelate(effect.ImageEffect):
     def initialize_effect(self):
         self.angle = 0
 
-    def apply_frame(self, frame: np.ndarray):
+    def apply_frame(self, frame: FullFrame, scene: Scene) -> np.ndarray:
         (height, width) = frame.shape[:2]
-        if self.center_on_face:
-            # TODO: Implement
-            raise NotImplementedError
+        if self.center_on_face and len(frame.faces) > 0:
+            # TODO: Consider smarter approach for following same face
+            focus_face: Face = frame.faces[0]
+            center = focus_face.center_of(focus_face.__dict__)
         else:
             center = (width / 2, height / 2)
+        angles_per_frame = 360 * self.speed / scene.clip.fps
+        self.angle += angles_per_frame
         rotation_matrix = cv2.getRotationMatrix2D(center, self.angle, self.scale)
         return cv2.warpAffine(frame, rotation_matrix, (width, height))

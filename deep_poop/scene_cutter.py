@@ -1,6 +1,7 @@
 from typing import List
 
 import scenedetect
+from moviepy.editor import VideoClip
 
 from deep_poop.scene import Scene
 
@@ -62,7 +63,7 @@ class SceneCutter:
             )
         self._scene_threshold = val
 
-    def get_scenes(self, video_file):
+    def get_scenes(self, video_file: str):
         return self.split_scenes(
             video_file=video_file,
             threshold=self.scene_threshold,

@@ -2,6 +2,7 @@ from moviepy.editor import VideoClip
 
 import deep_poop.effects.effect as effect
 import deep_poop.effects.utils as utils
+from deep_poop.scene import Scene
 
 
 class Echo(effect.Effect):
@@ -19,7 +20,8 @@ class Echo(effect.Effect):
         self.delay = delay
         self.strength = strength
 
-    def effect_function(self, video: VideoClip):
+    def effect_function(self, scene: Scene):
+        video = scene.clip
         audio = video.audio
         audio_frames = utils.audio_to_frames(audio)
         d = int(audio.fps * self.delay)

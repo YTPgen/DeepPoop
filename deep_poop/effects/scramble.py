@@ -3,6 +3,7 @@ import random
 from moviepy.editor import VideoClip
 
 from deep_poop.clips.cut_clip import CutClip
+from deep_poop.scene import Scene
 import deep_poop.effects.effect as effect
 
 
@@ -21,8 +22,8 @@ class Scramble(effect.Effect):
         self.unique_scramble = unique_scramble
         self.scramble_frame_length = scramble_frame_length
 
-    def effect_function(self, video: VideoClip):
-        cut_clip = CutClip(video)
+    def effect_function(self, scene: Scene):
+        cut_clip = CutClip(scene.clip)
 
         scrambled_frames = []
         clip_frames_length = len(cut_clip.frames)

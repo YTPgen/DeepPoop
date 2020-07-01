@@ -6,6 +6,8 @@ import abc
 import cv2
 from moviepy.editor import VideoClip, ImageSequenceClip
 
+from deep_poop.scene import Scene
+
 
 class EffectType(Enum):
     AUDIO = 0
@@ -52,16 +54,19 @@ class Effect:
         print("Warning: Defaulting to random effect length")
         return random.uniform(min_len, max_len)
 
-    def apply(self, video: VideoClip):
+    def apply(self, scene: Scene):
         self.initialize_effect()
-        self.effect_function(video)
+        return self.effect_function(scene)
 
     @abc.abstractmethod
-    def effect_function(self, video: VideoClip):
+    def effect_function(self, scene: Scene) -> VideoClip:
         """Functionality when effect is applied. To be implemented by each effect.
 
         Args:
-            video (VideoClip): Video to apply effect on
+            scene (Scene): Scene to apply effect on
+
+        Returns:
+            VideoClip: Scene video clip with applied function
         """
         raise NotImplementedError
 
@@ -70,29 +75,34 @@ class ImageEffect(Effect):
     def __init__(self, *args, **kwargs):
         super(ImageEffect, self).__init__(*args, **kwargs)
 
-    def effect_function(self, video: VideoClip):
+    def effect_function(self, scene: Scene) -> VideoClip:
+        """Applies image effect to each frame of scene video clip.
+
+        Args:
+            scene (Scene): Scene to apply effect on
+
+        Returns:
+            VideoClip: Transformed scene video clip
+        """
         output_frames = []
-        for t, video_frame in video.iter_frames(with_times=True):
-            video_frame = cv2.cvtColor(video_frame, cv2.COLOR_RGB2BGR)
-            f = self.apply_frame(video_frame)
+        for frame in scene.frames:
+            # TODO: Fix color or move to FullFrame
+            # frame.video_frame = cv2.cvtColor(frame.video_frame, cv2.COLOR_RGB2BGR)
+            f = self.apply_frame(frame.video_frame, scene)
             output_frames.append(f)
-        output_video = ImageSequenceClip(output_frames, video.fps)
-        output_video.audio = video.audio
+        output_video = ImageSequenceClip(output_frames, scene.clip.fps)
+        output_video.audio = scene.clip.audio
         return output_video
 
     @abc.abstractmethod
-    def apply_frame(self, frame: np.ndarray):
+    def apply_frame(self, frame: np.ndarray, scene: Scene) -> np.ndarray:
+        """Applies effect function on a single image frame.
+
+        Args:
+            frame (np.ndarray): Image frame
+            scene (Scene): Scene info of image frame
+
+        Returns:
+            np.ndarray: Transformed image frame
+        """
         pass
-
-
-# effects = [
-#     ImageEffect(
-#         name="invert",
-#         function=ytp_effects.image.color.invert,
-#         intensity=1.5,
-#         effect_type=EffectType.IMAGE,
-#         max_len=2.5,
-#         length_distribution=EffectLengthDistribution.RANDOM,
-#     ),
-# ]
-

@@ -5,6 +5,7 @@ import cv2
 
 import deep_poop.effects.effect as effect
 import deep_poop.effects.utils as utils
+from deep_poop.scene import Scene
 
 
 class Pixelate(effect.ImageEffect):
@@ -20,7 +21,7 @@ class Pixelate(effect.ImageEffect):
         super(Pixelate, self).__init__(*args, **kwargs)
         self.strength = strength
 
-    def apply_frame(self, frame: np.ndarray):
+    def apply_frame(self, frame: np.ndarray, scene: Scene):
         squish_strength = 1 + self.strength
         (height, width) = frame.shape[:2]
         frame = cv2.resize(

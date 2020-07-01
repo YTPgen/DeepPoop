@@ -16,6 +16,7 @@ class FullFrame(object):
     def __init__(self, video_frame, audio_frames):
         self.video_frame = video_frame
         self.audio_frames = audio_frames
+        self.face_locations = []
 
 
 class CutClip(object):
@@ -26,12 +27,12 @@ class CutClip(object):
             video_clip (moviepy.editor.VideoFileClip): Video clip to cut from
     """
 
-    def __init__(self, video_clip: moviepy.editor.VideoFileClip):
+    def __init__(self, video_clip: moviepy.editor.VideoClip):
         self.video_fps = video_clip.fps
         self.audio_fps = video_clip.audio.fps
         self.frames = self.video_to_frames(video_clip)
 
-    def video_to_frames(self, video_clip: moviepy.editor.VideoFileClip):
+    def video_to_frames(self, video_clip: moviepy.editor.VideoClip):
         """Cuts a video into a sequence of FullFrame objects.
 
         Args:
@@ -51,7 +52,7 @@ class CutClip(object):
             frames.append(next_frame)
         return frames
 
-    def to_video(self) -> moviepy.editor.VideoFileClip:
+    def to_video(self) -> moviepy.editor.VideoClip:
         """Recreates video clip from self-contained list
         of full frames.
 
