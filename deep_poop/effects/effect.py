@@ -58,6 +58,18 @@ class Effect:
         self.initialize_effect()
         return self.effect_function(scene)
 
+    def selection_score(self, scene: Scene) -> float:
+        """Returns a score for how well this effect matches a given scene.
+        For example, a score of 0 is no match at all and a score of 1 is a full match.
+
+        Args:
+            scene (Scene): Scene to find selection score for
+
+        Returns:
+            float: Selection score
+        """
+        return 0.5
+
     @abc.abstractmethod
     def effect_function(self, scene: Scene) -> VideoClip:
         """Functionality when effect is applied. To be implemented by each effect.
