@@ -51,12 +51,16 @@ class Effect:
             middle = (max_len + min_len) / 2
             sigma = (max_len - middle) / 10
             return random.gauss((max_len + min_len) / 2, sigma)
-        print("Warning: Defaulting to random effect length")
+        # TODO: Log
+        # print("Warning: Defaulting to random effect length")
         return random.uniform(min_len, max_len)
 
     def apply(self, scene: Scene):
         self.initialize_effect()
-        return self.effect_function(scene)
+        original_clip = scene.clip.copy()
+        changed_clip = self.effect_function(scene)
+        scene.clip = original_clip
+        return changed_clip
 
     def selection_score(self, scene: Scene) -> float:
         """Returns a score for how well this effect matches a given scene.

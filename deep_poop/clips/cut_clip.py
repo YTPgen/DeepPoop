@@ -18,6 +18,15 @@ class FullFrame(object):
         self.audio_frames = audio_frames
         self.face_locations = []
 
+    def __eq__(self, other):
+        if not isinstance(other, FullFrame):
+            return False
+        if not np.ndarray.all(self.video_frame == other.video_frame):
+            return False
+        if not np.ndarray.all(self.audio_frames == other.audio_frames):
+            return False
+        return True
+
 
 class CutClip(object):
     """Helper class for cutting a video into video
