@@ -1,0 +1,21 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.3.2
+
+jobs:
+  build-and-test:
+    docker:
+      - image: gylleus/deep-poop-dev
+    steps:
+      - checkout
+      - python/load-cache
+      - python/install-deps
+      - python/save-cache
+      - python/test:
+          pytest: True
+      
+workflows:
+  main:
+    jobs:
+      - build-and-test
