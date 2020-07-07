@@ -1,4 +1,4 @@
-[![DeepPoop](https://circleci.com/github/YTPgen/DeepPoop.svg?style=svg)](https://app.circleci.com/pipelines/github/YTPgen)
+[![DeepPoop](https://circleci.com/gh/YTPgen/DeepPoop.svg?style=svg)](https://app.circleci.com/pipelines/github/YTPgen)
 
 # DeepPoop
 GUI and components for generating YTP videos
