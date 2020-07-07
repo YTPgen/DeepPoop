@@ -1,3 +1,5 @@
+[![DeepPoop](https://circleci.com/github/YTPgen/DeepPoop.svg?style=svg)](https://app.circleci.com/pipelines/github/YTPgen)
+
 # DeepPoop
 GUI and components for generating YTP videos
 
@@ -24,3 +26,9 @@ able to:
 * EffectApplier - Applies an appropriate effect to a subscene (might be no effect)
 * ytp_effects - Library containing effect implementations
 * Generator - Main class responsible for application flow
+
+## Linux installs
+
+```bash
+sudo apt-get install build-essential libsndfile1. cmake libsm6 libxext6 libxrender-dev ffmpeg 
+```
