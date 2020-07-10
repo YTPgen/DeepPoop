@@ -3,6 +3,7 @@ from fire import Fire
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from deep_poop.scene_cutter import SceneCutter
 from deep_poop.effect_applier import EffectApplier
+from deep_poop.effect_list import EFFECTS
 
 
 class Generator:
@@ -44,13 +45,12 @@ class Generator:
         )
         self.length = length
         self._effect_applier = EffectApplier(
-            max_intensity=max_intensity, easy_start=easy_start
+            max_intensity=max_intensity, easy_start=easy_start, effects=EFFECTS
         )
         self.reuse = reuse
         self.abruptness = abruptness
 
     def generate(self):
-        video = VideoFileClip(self.video_file)
         scenes = self._scene_cutter.get_scenes(self.video_file)
         for s in scenes:
             s.subscenes = self._scene_cutter.find_subscenes(s)
@@ -62,7 +62,7 @@ class Generator:
             # TODO: Make so can start in middle
             from_subscene = 0
             until_subscene = from_subscene + 1
-            for i in range(from_subscene, len(current_scene.subscenes) - 1):
+            for _ in range(from_subscene, len(current_scene.subscenes) - 1):
                 if random.random() < self.abruptness:
                     break
                 until_subscene += 1
@@ -71,7 +71,7 @@ class Generator:
             for subscene in subscenes:
                 subscene.analyze_frames()
                 print(f"Applying effect at {total_duration}")
-                new_clip = self._effect_applier.apply_effects(subscene)
+                new_clip = self._effect_applier.feed_scene(subscene)
                 ytp_clips.append(new_clip)
                 total_duration += new_clip.duration
         output_video = concatenate_videoclips(ytp_clips)
