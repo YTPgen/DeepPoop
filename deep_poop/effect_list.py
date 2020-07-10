@@ -9,6 +9,9 @@ EFFECTS = [
         max_len=1.5,
         length_distribution=EffectLengthDistribution.RANDOM,
         can_cut=True,
+        compatible_effects={
+            effects.Pixelate: 1
+        }
     ),
     effects.Echo(
         delay=0.1,
@@ -16,6 +19,9 @@ EFFECTS = [
         intensity=1.4,
         max_len=5,
         length_distribution=EffectLengthDistribution.NORMAL,
+        compatible_effects={
+            effects.Rotate: 1
+        }
     ),
     effects.Invert(
         intensity=1.8, max_len=2.5, length_distribution=EffectLengthDistribution.RANDOM,
@@ -25,6 +31,9 @@ EFFECTS = [
         intensity=1.7,
         max_len=4,
         length_distribution=EffectLengthDistribution.RANDOM,
+        compatible_effects={
+            effects.Rotate: 1
+        }
     ),
     effects.Rotate(
         speed=3,

@@ -1,3 +1,4 @@
 fire==0.3.1
+scenedetect
 
 ytp_effects @ git+https://github.com/YTPgen/ytp-effects

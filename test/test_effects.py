@@ -3,6 +3,7 @@ import pytest
 from deep_poop.scene import Scene
 from deep_poop.clips.cut_clip import CutClip, FullFrame
 from deep_poop.effects.effect import EffectLengthDistribution
+from test.utils import scene_frames_identical
 
 
 def assert_effect_length(effect):
@@ -32,12 +33,12 @@ class EffectTest:
         changed_clip = self.effect.apply(scene)
         frames_after = CutClip(scene.clip).frames
         # Check that effect did not change the scene object itself
-        assert self.scene_frames_identical(
+        assert scene_frames_identical(
             frames_before, frames_after
-        ), "Scene frames are different after effect"
-        assert not self.scene_frames_identical(
+        ), "Scene object clip is different after effect. Should only return altered copy."
+        assert not scene_frames_identical(
             frames_before, CutClip(changed_clip).frames
-        ), "Scene after effect is identical to before"
+        ), "Scene clip copy with effect is identical to before"
 
     def test_selection_score(self, scene):
         score = self.effect.selection_score(scene)
@@ -66,26 +67,26 @@ def test_normal_length(test_effect):
 
 
 def test_echo(scene, echo):
-    effect_test = EffectTest(echo, scene)
+    EffectTest(echo, scene)
 
 
 def test_pixelate(scene, pixelate):
-    effect_test = EffectTest(pixelate, scene)
+    EffectTest(pixelate, scene)
 
 
 def test_invert(scene, invert):
-    effect_test = EffectTest(invert, scene)
+    EffectTest(invert, scene)
 
 
 def test_rotate(scene, rotate):
-    effect_test = EffectTest(rotate, scene)
+    EffectTest(rotate, scene)
 
 
 def test_scramble_nonunique(scene, scramble):
     scramble.unique = False
-    effect_test = EffectTest(scramble, scene)
+    EffectTest(scramble, scene)
 
 
 def test_scramble_unique(scene, scramble):
     scramble.unique = True
-    effect_test = EffectTest(scramble, scene)
+    EffectTest(scramble, scene)

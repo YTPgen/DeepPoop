@@ -29,6 +29,7 @@ class Effect:
         max_len: float = 3600,
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
+        compatible_effects : dict = {},
     ):
         self.intensity = intensity
         self.type = effect_type
@@ -36,6 +37,10 @@ class Effect:
         self.max_len = max_len
         self.can_cut = can_cut
         self.length_distribution = length_distribution
+        self.compatible_effects = compatible_effects
+
+    def name(self):
+        return self.__class__.__name__
 
     def initialize_effect(self):
         """Any initialization that needs to take place when effect is used.
