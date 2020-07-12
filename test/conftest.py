@@ -19,7 +19,7 @@ def clip():
 
 @pytest.fixture(scope="session")
 def scene():
-    s = Scene(video_file=test_clip, start=0.0, end=3.0)
+    s = Scene(video_file=test_clip, start=0, end=3)
     s.analyze_frames()
     return s
 

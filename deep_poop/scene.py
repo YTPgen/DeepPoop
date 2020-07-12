@@ -80,3 +80,11 @@ class Scene:
         scene_copy = Scene(video_file=self.video_file, start=self.start, end=self.end)
         scene_copy.frames = self.frames
         return scene_copy
+
+    def subclip(self, start, end):
+        start = int(start)
+        end = int(end)
+        self.frames = self.frames[start - self.start : end - self.start]
+        self.start = start
+        self.end = end
+        self.clip: VideoClip = self._get_scene_clip()
