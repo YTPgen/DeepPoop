@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from moviepy.editor import VideoClip
 import cv2
@@ -18,16 +19,25 @@ class Rotate(effect.ImageEffect):
 
     """
 
-    def __init__(self, speed: float, center_on_face: bool = False, *args, **kwargs):
+    def __init__(
+        self,
+        min_speed: float,
+        max_speed: float,
+        center_on_face: bool = False,
+        *args,
+        **kwargs
+    ):
         kwargs["effect_type"] = effect.EffectType.IMAGE
         super(Rotate, self).__init__(*args, **kwargs)
-        self.speed = speed
+        self.min_speed = min_speed
+        self.max_speed = max_speed
         self.center_on_face = center_on_face
         # TODO: Consider adding scale up/down
         self.scale = 1
 
-    def initialize_effect(self):
+    def initialize_effect(self, strength: float):
         self.angle = 0
+        self.speed = (self.max_speed - self.min_speed) * strength + self.min_speed
 
     def apply_frame(self, frame: FullFrame, scene: Scene) -> np.ndarray:
         (height, width) = frame.shape[:2]

@@ -52,7 +52,7 @@ class Effect:
     def name(self):
         return self.__class__.__name__
 
-    def initialize_effect(self):
+    def initialize_effect(self, strength: float):
         """Any initialization that needs to take place when effect is used.
         """
         pass
@@ -70,8 +70,8 @@ class Effect:
         # print("Warning: Defaulting to random effect length")
         return random.uniform(min_len, max_len)
 
-    def apply(self, scene: Scene):
-        self.initialize_effect()
+    def apply(self, scene: Scene, strength=1):
+        self.initialize_effect(strength)
         original_clip = scene.clip.copy()
         changed_clip = self.effect_function(scene)
         scene.clip = original_clip

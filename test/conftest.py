@@ -46,14 +46,16 @@ def invert():
 
 @pytest.fixture(scope="session")
 def pixelate():
-    return Pixelate(strength=5, intensity=1)
+    return Pixelate(min_strength=3, max_strength=5, intensity=1)
 
 
 @pytest.fixture(scope="session")
 def rotate():
-    return Rotate(speed=3, intensity=1)
+    return Rotate(min_speed=1, max_speed=1.5, intensity=1)
 
 
 @pytest.fixture(scope="session")
 def scramble():
-    return Scramble(scramble_frame_length=3, intensity=1)
+    return Scramble(
+        min_scramble_frame_length=1, max_scramble_frame_length=3, intensity=1
+    )

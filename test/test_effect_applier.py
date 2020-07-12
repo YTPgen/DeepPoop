@@ -10,7 +10,7 @@ from test.utils import scene_frames_identical
 
 @pytest.fixture(scope="session")
 def dummy_effect():
-    def _same_clip(scene):
+    def _same_clip(scene, strength):
         return scene.clip
 
     dummy_effect = Effect(intensity=1, effect_type=None)
