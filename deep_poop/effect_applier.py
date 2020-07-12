@@ -17,34 +17,40 @@ class EffectApplier:
         self.intensity = easy_start
         self.max_intensity = max_intensity
         self.effects = effects
+        self._previous_effect: Effect = None
 
-    def skip_effect(self):
+    def _skip_effect(self):
         return random.random() < self.intensity / self.max_intensity
 
-    def feed_scene(self, scene: Scene):
+    def _continue_add_effects(self):
+        return self.intensity < self.max_intensity
+
+    def feed_scene(self, scene: Scene) -> VideoClip:
+        if self._skip_effect():
+            self.intensity -= scene.length()
+            return scene.clip
+        edited_scene = scene.copy()
+        self._previous_effect = None
+        while self._continue_add_effects():
+            usable_effects = self._usable_effects(edited_scene.length())
+            if usable_effects == []:
+                break
+            next_effect = self._select_effect(effects=usable_effects, scene=scene)
+            edited_scene.clip = self._apply_effect(edited_scene, next_effect)
+            self._previous_effect = next_effect
+        self.intensity -= edited_scene.length()
+        return edited_scene.clip
+
+    def _apply_effect(self, scene: Scene, effect: Effect) -> VideoClip:
         scene_length = scene.length()
-        previous_effect = None
-        if not self.skip_effect():
-            usable_effects = self.usable_effects(scene_length)
-            # TODO: Change to use multiple effects at same time
-            if usable_effects != []:
-                effect = self.select_effect(
-                    effects=usable_effects, scene=scene, previous_effect=previous_effect
-                )
-                original_clip = scene.clip
-                scene_length = self.get_effect_length(effect, scene_length)
-                scene.clip = scene.clip.subclip(0, scene_length)
-                print(f"INFO: Applied {effect.__class__.__name__}")
-                transformed_clip = effect.apply(scene)
-                scene.clip = original_clip
-                self.intensity += scene_length * effect.intensity
-                self.intensity -= scene_length
-                if transformed_clip is None:
-                    raise ValueError
-                return transformed_clip
-        print(f"DEBUG: Skipped applying effect")
-        self.intensity -= scene_length
-        return scene.clip
+        scene_length = self.get_effect_length(effect, scene_length)
+        scene.clip = scene.clip.subclip(0, scene_length)
+        print(f"INFO: Applied {effect.__class__.__name__}")
+        transformed_clip = effect.apply(scene)
+        if transformed_clip is None:
+            raise ValueError
+        self.intensity += scene_length * effect.intensity
+        return transformed_clip
 
     def can_apply(self, effect: Effect, scene_length: float):
         total_intensity = scene_length * effect.intensity
@@ -59,16 +65,22 @@ class EffectApplier:
                 return False
         return True
 
-    def usable_effects(self, scene_length: float):
-        return [e for e in self.effects if self.can_apply(e, scene_length)]
+    def _usable_effects(self, scene_length: float):
+        if self._previous_effect is None:
+            effect_list = self.effects
+        else:
+            effect_list = [
+                e
+                for e in self.effects
+                if type(e) in self._previous_effect.compatible_effects()
+            ]
+        return [e for e in effect_list if self.can_apply(e, scene_length)]
 
-    def select_effect(
-        self, effects: List[Effect], scene: Scene, previous_effect: Effect
-    ):
+    def _select_effect(self, effects: List[Effect], scene: Scene):
         selection_scores = np.array([e.selection_score(scene) for e in effects])
-        if previous_effect is not None:
+        if self._previous_effect is not None:
             neighbor_scores = np.array(
-                [previous_effect.neighbor_score(e) for e in effects]
+                [self._previous_effect.neighbor_score(e) for e in effects]
             )
         else:
             neighbor_scores = np.ones(len(selection_scores))

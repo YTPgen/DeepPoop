@@ -10,8 +10,11 @@ from test.utils import scene_frames_identical
 
 @pytest.fixture(scope="session")
 def dummy_effect():
+    def _same_clip(scene):
+        return scene.clip
+
     dummy_effect = Effect(intensity=1, effect_type=None)
-    dummy_effect.apply = MagicMock()
+    dummy_effect.apply = MagicMock(side_effect=_same_clip)
     return dummy_effect
 
 

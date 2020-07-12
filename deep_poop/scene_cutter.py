@@ -100,8 +100,8 @@ class SceneCutter:
             List[Scene]: List of split Scenes
         """
         scenes = []
+        video_manager = scenedetect.VideoManager([video_file])
         try:
-            video_manager = scenedetect.VideoManager([video_file])
             scene_manager = scenedetect.SceneManager()
             scene_manager.add_detector(scenedetect.ContentDetector(threshold, min_len))
             video_manager.set_downscale_factor(self.downscale)
