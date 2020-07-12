@@ -4,6 +4,13 @@ orbs:
   python: circleci/python@0.3.2
 
 jobs:
+  format-check:
+    docker:
+      - image: gylleus/deep-poop-dev
+    steps:
+      - run:
+          name: format-check
+          command: black . --check
   build-and-test:
     docker:
       - image: gylleus/deep-poop-dev
@@ -18,4 +25,5 @@ jobs:
 workflows:
   main:
     jobs:
+      - format-check
       - build-and-test
