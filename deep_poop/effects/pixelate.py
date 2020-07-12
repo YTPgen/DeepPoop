@@ -16,10 +16,17 @@ class Pixelate(effect.ImageEffect):
 
     """
 
-    def __init__(self, strength: float, *args, **kwargs):
+    def __init__(self, min_strength: int, max_strength: int, *args, **kwargs):
         kwargs["effect_type"] = effect.EffectType.IMAGE
         super(Pixelate, self).__init__(*args, **kwargs)
-        self.strength = strength
+        self.min_strength = min_strength
+        self.max_strength = max_strength
+
+    def initialize_effect(self, strength: float):
+        self.angle = 0
+        self.strength = (
+            self.max_strength - self.min_strength
+        ) * strength + self.min_strength
 
     def apply_frame(self, frame: np.ndarray, scene: Scene):
         squish_strength = 1 + self.strength

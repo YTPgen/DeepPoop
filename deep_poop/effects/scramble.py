@@ -16,11 +16,25 @@ class Scramble(effect.Effect):
 
     """
 
-    def __init__(self, scramble_frame_length=1, unique_scramble=True, *args, **kwargs):
+    def __init__(
+        self,
+        min_scramble_frame_length=1,
+        max_scramble_frame_length=1,
+        unique_scramble=True,
+        *args,
+        **kwargs
+    ):
         kwargs["effect_type"] = effect.EffectType.VIDEO
         super(Scramble, self).__init__(*args, **kwargs)
         self.unique_scramble = unique_scramble
-        self.scramble_frame_length = scramble_frame_length
+        self.min_scramble_frame_length = min_scramble_frame_length
+        self.max_scramble_frame_length = max_scramble_frame_length
+
+    def initialize_effect(self, strength: float):
+        self.scramble_frame_length = int(
+            (self.max_scramble_frame_length - self.min_scramble_frame_length) * strength
+            + self.min_scramble_frame_length
+        )
 
     def effect_function(self, scene: Scene):
         cut_clip = CutClip(scene.clip)

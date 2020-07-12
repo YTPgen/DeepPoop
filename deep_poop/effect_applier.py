@@ -113,11 +113,16 @@ class EffectApplier:
         scene_length = self.get_effect_length(effect, scene_length)
         scene.clip = scene.clip.subclip(0, scene_length)
         print(f"INFO: Applied {effect.__class__.__name__}")
-        transformed_clip = effect.apply(scene)
+        transformed_clip = effect.apply(
+            scene=scene, strength=self._choose_effect_strength()
+        )
         if transformed_clip is None:
             raise ValueError
         self.intensity += scene_length * effect.intensity
         return transformed_clip
+
+    def _choose_effect_strength(self):
+        return random.random()
 
     def can_apply(self, effect: Effect, scene_length: float):
         total_intensity = scene_length * effect.intensity
