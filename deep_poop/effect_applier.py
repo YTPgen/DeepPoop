@@ -17,12 +17,23 @@ class EffectApplier:
         self.intensity = easy_start
         self.max_intensity = max_intensity
         self.effects = effects
-        self._previous_effect: Effect = None
+        self._currenty_applied_effects = []
 
     def _skip_effect(self):
         return random.random() < self.intensity / self.max_intensity
 
+    def _previous_effect(self):
+        if len(self._currenty_applied_effects) == 0:
+            return None
+        return self._currenty_applied_effects[-1]
+
     def _continue_add_effects(self):
+        if (
+            self._previous_effect() is not None
+            and not self._previous_effect().standalone
+            and len(self._currenty_applied_effects) == 1
+        ):
+            return True
         return self.intensity < self.max_intensity
 
     def feed_scene(self, scene: Scene) -> VideoClip:
@@ -30,14 +41,14 @@ class EffectApplier:
             self.intensity -= scene.length()
             return scene.clip
         edited_scene = scene.copy()
-        self._previous_effect = None
+        self._currenty_applied_effects = []
         while self._continue_add_effects():
             usable_effects = self._usable_effects(edited_scene.length())
             if usable_effects == []:
                 break
             next_effect = self._select_effect(effects=usable_effects, scene=scene)
             edited_scene.clip = self._apply_effect(edited_scene, next_effect)
-            self._previous_effect = next_effect
+            self._currenty_applied_effects.append(next_effect)
         self.intensity -= edited_scene.length()
         return edited_scene.clip
 
@@ -66,21 +77,20 @@ class EffectApplier:
         return True
 
     def _usable_effects(self, scene_length: float):
-        if self._previous_effect is None:
-            effect_list = self.effects
+        if self._previous_effect() is None:
+            return [e for e in self.effects if self.can_apply(e, scene_length)]
         else:
-            effect_list = [
+            return [
                 e
                 for e in self.effects
-                if type(e) in self._previous_effect.compatible_effects()
+                if type(e) in self._previous_effect().compatible_effects()
             ]
-        return [e for e in effect_list if self.can_apply(e, scene_length)]
 
     def _select_effect(self, effects: List[Effect], scene: Scene):
         selection_scores = np.array([e.selection_score(scene) for e in effects])
-        if self._previous_effect is not None:
+        if self._previous_effect() is not None:
             neighbor_scores = np.array(
-                [self._previous_effect.neighbor_score(e) for e in effects]
+                [self._previous_effect().neighbor_score(e) for e in effects]
             )
         else:
             neighbor_scores = np.ones(len(selection_scores))

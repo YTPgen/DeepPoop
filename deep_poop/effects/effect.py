@@ -30,6 +30,7 @@ class Effect:
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
         compatible_effects: dict = {},
+        standalone=True,
     ):
         self.intensity = intensity
         self.type = effect_type
@@ -38,6 +39,11 @@ class Effect:
         self.can_cut = can_cut
         self.length_distribution = length_distribution
         self._compatible_effects = compatible_effects
+        self.standalone = standalone
+        if len(self.compatible_effects()) == 0 and not self.standalone:
+            raise Exception(
+                "Effect can not be non-standalone with no compatible effects"
+            )
 
     def compatible_effects(self):
         # TODO: Could be special case if no connections or global conf to connect all
