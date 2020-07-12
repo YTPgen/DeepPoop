@@ -8,4 +8,3 @@ def scene_frames_identical(a: List[FullFrame], b: List[FullFrame]):
         if not f_a == f_b:
             return False
     return True
-

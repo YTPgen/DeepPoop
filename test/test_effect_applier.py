@@ -34,4 +34,3 @@ def test_effect_applier_applied(effect_applier, scene):
     effect_applier.intensity = 0
     effect_applier.feed_scene(scene)
     effect_applier.effects[0].apply.assert_called()
-

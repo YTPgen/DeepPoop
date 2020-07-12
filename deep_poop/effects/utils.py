@@ -9,4 +9,3 @@ def audio_to_frames(audio: AudioClip):
 
 def frames_to_audio(frames: np.ndarray, fps: float):
     return AudioArrayClip(frames, fps)
-
