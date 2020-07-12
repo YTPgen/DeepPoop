@@ -71,3 +71,12 @@ class Scene:
         """
         return self.end - self.start
 
+    def copy(self):
+        """Returns a copy of this scene
+
+        Returns:
+            Scene: Distinct copy of scene
+        """
+        scene_copy = Scene(video_file=self.video_file, start=self.start, end=self.end)
+        scene_copy.frames = self.frames
+        return scene_copy

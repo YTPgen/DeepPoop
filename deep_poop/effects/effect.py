@@ -29,7 +29,8 @@ class Effect:
         max_len: float = 3600,
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
-        compatible_effects : dict = {},
+        compatible_effects: dict = {},
+        standalone=True,
     ):
         self.intensity = intensity
         self.type = effect_type
@@ -37,7 +38,16 @@ class Effect:
         self.max_len = max_len
         self.can_cut = can_cut
         self.length_distribution = length_distribution
-        self.compatible_effects = compatible_effects
+        self._compatible_effects = compatible_effects
+        self.standalone = standalone
+        if len(self.compatible_effects()) == 0 and not self.standalone:
+            raise Exception(
+                "Effect can not be non-standalone with no compatible effects"
+            )
+
+    def compatible_effects(self):
+        # TODO: Could be special case if no connections or global conf to connect all
+        return list(self._compatible_effects.keys())
 
     def name(self):
         return self.__class__.__name__
@@ -78,6 +88,20 @@ class Effect:
             float: Selection score
         """
         return 0.5
+
+    def neighbor_score(self, effect) -> float:
+        """Returns the weight of the neighbor edge to a given effect. 
+
+        Args:
+            effect (Effect): Neighboring effect
+
+        Returns:
+            float: Weight of edge to effect
+        """
+        other_type = type(effect)
+        if other_type not in self._compatible_effects:
+            return 0
+        return self._compatible_effects[other_type]
 
     @abc.abstractmethod
     def effect_function(self, scene: Scene) -> VideoClip:
