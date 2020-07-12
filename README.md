@@ -1,8 +1,9 @@
-[![DeepPoop](https://circleci.com/gh/YTPgen/DeepPoop.svg?style=svg)](https://app.circleci.com/pipelines/github/YTPgen)
+[![DeepPoop-CI](https://circleci.com/gh/YTPgen/DeepPoop.svg?style=shield&circle-token=34e5679a4cd6be8e1be9be66e5f7cd0f76490976)](https://app.circleci.com/pipelines/github/YTPgen)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # DeepPoop
 GUI and components for generating YTP videos
-
 
 # First version spec
 
