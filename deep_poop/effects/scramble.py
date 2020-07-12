@@ -11,7 +11,8 @@ class Scramble(effect.Effect):
     """Scrambles the order of frames in a clip.
 
     Args:
-        scramble_frame_length (int, optional): Length of each scramble sequence. Defaults to 1.
+        min_scramble_frame_length (int, optional): Minimum length of each scramble sequence. Defaults to 1.
+        max_scramble_frame_length (int, optional): Maximum length of each scramble sequence. Defaults to 1.
         unique_scramble (bool, optional): If set to True allow to reuse same frames. Defaults to True.
 
     """

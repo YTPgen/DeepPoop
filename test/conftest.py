@@ -5,19 +5,19 @@ from moviepy.editor import VideoFileClip
 
 from deep_poop.scene import Scene
 from deep_poop.effects.effect import Effect, ImageEffect
-from deep_poop.effects import Echo, Invert, Pixelate, Rotate, Scramble
+from deep_poop.effects import Echo, Invert, Pixelate, Rotate, Scramble, Zoom
 
 test_clip_name = "slice_lemon.mp4"
 current_dir = os.path.dirname(os.path.abspath(__file__))
 test_clip = os.path.join(current_dir, "clips", test_clip_name)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def clip():
     return VideoFileClip(test_clip)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def scene():
     s = Scene(video_file=test_clip, start=0, end=3)
     s.analyze_frames()
@@ -59,3 +59,8 @@ def scramble():
     return Scramble(
         min_scramble_frame_length=1, max_scramble_frame_length=3, intensity=1
     )
+
+
+@pytest.fixture(scope="function")
+def zoom():
+    return Zoom(min_factor=1.5, max_factor=2, center_on_face=False, intensity=1)

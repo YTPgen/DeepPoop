@@ -12,8 +12,8 @@ class Pixelate(effect.ImageEffect):
     """Pixelates images in a video.
 
     Args:
-        strength (float): Amount of pixelation
-
+        min_strength (float): Minimum amount of pixelation
+        max_strength (float): Maximum amount of pixelation
     """
 
     def __init__(self, min_strength: int, max_strength: int, *args, **kwargs):

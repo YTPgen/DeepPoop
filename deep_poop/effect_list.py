@@ -2,6 +2,32 @@ import deep_poop.effects as effects
 from deep_poop.effects.effect import EffectLengthDistribution
 
 EFFECTS = [
+    effects.Zoom(
+        min_factor=0.4,
+        max_factor=3,
+        intensity=0.8,
+        min_len=0.3,
+        max_len=3.0,
+        length_distribution=EffectLengthDistribution.RANDOM,
+    ),
+    effects.Zoom(
+        min_factor=1.4,
+        max_factor=3,
+        intensity=1.3,
+        min_len=0.3,
+        max_len=1.5,
+        length_distribution=EffectLengthDistribution.RANDOM,
+        zoom_y=False,
+    ),
+    effects.Zoom(
+        min_factor=1.4,
+        max_factor=3,
+        intensity=1.3,
+        min_len=0.3,
+        max_len=1.5,
+        length_distribution=EffectLengthDistribution.RANDOM,
+        zoom_x=False,
+    ),
     effects.Scramble(
         min_scramble_frame_length=1,
         max_scramble_frame_length=3,
