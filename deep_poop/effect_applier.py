@@ -133,9 +133,13 @@ class EffectApplier:
             effect_begin = random.uniform(0, scene_length - effect_length)
             clip_before = scene.clip.subclip(0, effect_begin)
             clip_after = scene.clip.subclip(effect_begin + effect_length, scene_length)
-            scene.clip = scene.clip.subclip(effect_begin, effect_begin + effect_length)
+            start_frame = scene.start + effect_begin * scene.clip.fps
+            end_frame = scene.start + (effect_begin + effect_length) * scene.clip.fps
+            if start_frame == end_frame:
+                print(f"WARNING: Effect {effect.name} is 0 frames long. Skipping...")
+            tmp_scene = scene.copy().subclip(start_frame, end_frame)
             transformed_clip = effect.apply(
-                scene=scene, strength=self._choose_effect_strength()
+                scene=tmp_scene, strength=self._choose_effect_strength()
             )
             scene.clip = concatenate_videoclips(
                 [clip_before, transformed_clip, clip_after]

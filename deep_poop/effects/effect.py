@@ -25,7 +25,7 @@ class Effect:
         self,
         intensity: float,
         effect_type: EffectType,
-        min_len: float = 0,
+        min_len: float = 0.5,
         max_len: float = 3600,
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
@@ -78,9 +78,7 @@ class Effect:
 
     def apply(self, scene: Scene, strength=1):
         self.initialize_effect(strength)
-        original_clip = scene.clip.copy()
         changed_clip = self.effect_function(scene)
-        scene.clip = original_clip
         return changed_clip
 
     def selection_score(self, scene: Scene) -> float:

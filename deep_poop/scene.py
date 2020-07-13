@@ -91,3 +91,4 @@ class Scene:
         self.start = start
         self.end = end
         self.clip: VideoClip = self._get_scene_clip()
+        return self
