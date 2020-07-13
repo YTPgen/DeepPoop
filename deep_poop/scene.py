@@ -84,7 +84,10 @@ class Scene:
     def subclip(self, start, end):
         start = int(start)
         end = int(end)
-        self.frames = self.frames[start - self.start : end - self.start]
+        new_frames = self.frames[start - self.start : end - self.start]
+        if len(new_frames) == 0:
+            print("Uhoh")
+        self.frames = new_frames
         self.start = start
         self.end = end
         self.clip: VideoClip = self._get_scene_clip()
