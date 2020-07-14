@@ -15,7 +15,8 @@ class Rotate(effect.ImageEffect):
     """Pixelates images in a video.
 
     Args:
-        speed (float): Rotations per second
+        min_speed (float): Minimum rotations per second
+        max_speed (float): Maximum rotations per second
 
     """
 

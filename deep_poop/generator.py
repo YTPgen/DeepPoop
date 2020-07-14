@@ -4,6 +4,7 @@ from moviepy.editor import VideoFileClip, concatenate_videoclips
 from deep_poop.scene_cutter import SceneCutter
 from deep_poop.effect_applier import EffectApplier
 from deep_poop.effect_list import EFFECTS
+from deep_poop.effects.utils import combine_audio_clips
 
 
 class Generator:
@@ -70,9 +71,18 @@ class Generator:
             subscenes = current_scene.subscenes[from_subscene:until_subscene]
             for subscene in subscenes:
                 subscene.analyze_frames()
+                # Ugly fix as scenecutter does not seem to respect minimum length
+                if len(subscene.frames) < self._scene_cutter.subscene_min_len:
+                    print(
+                        f"WARNING: Skipped subscene as length {len(subscene.frames)} is shorter than minimum"
+                    )
+                    continue
                 print(f"Applying effect at {total_duration}")
                 new_clip = self._effect_applier.feed_scene(subscene)
                 ytp_clips.append(new_clip)
                 total_duration += new_clip.duration
         output_video = concatenate_videoclips(ytp_clips)
+        output_video.audio = combine_audio_clips(
+            [c.audio for c in ytp_clips], scenes[0].clip.audio.fps
+        )
         output_video.write_videofile("test.mp4")

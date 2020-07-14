@@ -9,3 +9,10 @@ def audio_to_frames(audio: AudioClip):
 
 def frames_to_audio(frames: np.ndarray, fps: float):
     return AudioArrayClip(frames, fps)
+
+
+def combine_audio_clips(audio_clips, fps):
+    clips_frames = [audio_to_frames(c) for c in audio_clips]
+    audio_frames = np.concatenate(clips_frames)
+    return frames_to_audio(audio_frames, fps)
+

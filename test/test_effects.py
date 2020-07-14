@@ -31,11 +31,7 @@ class EffectTest:
     def test_apply(self, scene):
         frames_before = CutClip(scene.clip).frames
         changed_clip = self.effect.apply(scene)
-        frames_after = CutClip(scene.clip).frames
         # Check that effect did not change the scene object itself
-        assert scene_frames_identical(
-            frames_before, frames_after
-        ), "Scene object clip is different after effect. Should only return altered copy."
         assert not scene_frames_identical(
             frames_before, CutClip(changed_clip).frames
         ), "Scene clip copy with effect is identical to before"
@@ -90,3 +86,30 @@ def test_scramble_nonunique(scene, scramble):
 def test_scramble_unique(scene, scramble):
     scramble.unique = True
     EffectTest(scramble, scene)
+
+
+def test_zoom_in(scene, zoom):
+    zoom.min_factor = 2
+    zoom.max_factor = 3
+    EffectTest(zoom, scene)
+
+
+def test_zoom_out(scene, zoom):
+    zoom.min_factor = 0.1
+    zoom.max_factor = 0.5
+    EffectTest(zoom, scene)
+
+
+def test_zoom_x(scene, zoom):
+    zoom.zoom_y = False
+    EffectTest(zoom, scene)
+
+
+def test_zoom_y(scene, zoom):
+    zoom.zoom_x = False
+    EffectTest(zoom, scene)
+
+
+def test_zoom_face(scene, zoom):
+    zoom.center_on_face = True
+    EffectTest(zoom, scene)

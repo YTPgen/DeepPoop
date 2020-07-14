@@ -25,12 +25,13 @@ class Effect:
         self,
         intensity: float,
         effect_type: EffectType,
-        min_len: float = 0,
+        min_len: float = 0.5,
         max_len: float = 3600,
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
         compatible_effects: dict = {},
         standalone=True,
+        name=None,
     ):
         self.intensity = intensity
         self.type = effect_type
@@ -44,6 +45,7 @@ class Effect:
             raise Exception(
                 "Effect can not be non-standalone with no compatible effects"
             )
+        self.name = self.__class__.__name__ if name is None else name
 
     def compatible_effects(self):
         # TODO: Could be special case if no connections or global conf to connect all
@@ -61,20 +63,22 @@ class Effect:
         max_len = min(self.max_len, max_len)
         min_len = self.min_len
         if self.length_distribution == EffectLengthDistribution.RANDOM:
-            return random.uniform(min_len, max_len)
+            length = random.uniform(min_len, max_len)
         elif self.length_distribution == EffectLengthDistribution.NORMAL:
             middle = (max_len + min_len) / 2
             sigma = (max_len - middle) / 10
-            return random.gauss((max_len + min_len) / 2, sigma)
-        # TODO: Log
-        # print("Warning: Defaulting to random effect length")
-        return random.uniform(min_len, max_len)
+            length = random.gauss((max_len + min_len) / 2, sigma)
+        else:
+            # TODO: Log
+            # print("Warning: Defaulting to random effect length")
+            length = random.uniform(min_len, max_len)
+        if length <= 0:
+            raise ValueError
+        return length
 
     def apply(self, scene: Scene, strength=1):
         self.initialize_effect(strength)
-        original_clip = scene.clip.copy()
         changed_clip = self.effect_function(scene)
-        scene.clip = original_clip
         return changed_clip
 
     def selection_score(self, scene: Scene) -> float:
@@ -136,7 +140,7 @@ class ImageEffect(Effect):
             f = self.apply_frame(frame.video_frame, scene)
             output_frames.append(f)
         output_video = ImageSequenceClip(output_frames, scene.clip.fps)
-        output_video.audio = scene.clip.audio
+        output_video.audio = scene.clip.audio.copy()
         return output_video
 
     @abc.abstractmethod
