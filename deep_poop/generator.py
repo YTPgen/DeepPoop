@@ -53,7 +53,6 @@ class Generator:
 
     def generate(self):
         scenes = self._scene_cutter.get_scenes(self.video_file)
-        scenes = scenes[:1]
         for s in scenes:
             s.subscenes = self._scene_cutter.find_subscenes(s)
         total_duration = 0
@@ -72,6 +71,7 @@ class Generator:
             subscenes = current_scene.subscenes[from_subscene:until_subscene]
             for subscene in subscenes:
                 subscene.analyze_frames()
+                # Ugly fix as scenecutter does not seem to respect minimum length
                 if len(subscene.frames) < self._scene_cutter.subscene_min_len:
                     print(
                         f"WARNING: Skipped subscene as length {len(subscene.frames)} is shorter than minimum"
