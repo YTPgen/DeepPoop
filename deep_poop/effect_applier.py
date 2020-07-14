@@ -4,9 +4,9 @@ import copy
 import numpy as np
 import math
 
-from moviepy.editor import VideoClip, concatenate_videoclips
+from moviepy.editor import VideoClip
 
-from deep_poop.effects.utils import combine_audio_clips
+from deep_poop.effects.utils import combine_video_clips
 from deep_poop.scene import Scene
 from deep_poop.effects.effect import Effect
 from deep_poop.config import SELECTION_SCORE_WEIGHT, NEIGHBOR_SCORE_WEIGHT
@@ -83,6 +83,7 @@ class EffectApplier:
         ):
             self.intensity -= self._intensity_loss(scene.length())
             return scene.clip
+        scene_before = scene.copy()
         edited_scene = scene.copy()
         self._set_next_effect_trigger_threshold()
         if _time_until_next_effect > 0:
@@ -92,11 +93,8 @@ class EffectApplier:
                 end=edited_scene.end,
             )
             self._process_scene_effects(edited_scene)
-            clip_before = scene.clip.subclip(0, _time_until_next_effect)
-            edited_clip = concatenate_videoclips([clip_before, edited_scene.clip])
-            edited_clip.audio = combine_audio_clips(
-                [clip_before.audio, edited_scene.clip.audio], clip_before.audio.fps
-            )
+            clip_before = scene_before.clip.subclip(0, _time_until_next_effect)
+            edited_clip = combine_video_clips([clip_before, edited_scene.clip])
             return edited_clip
         else:
             self._process_scene_effects(edited_scene)
@@ -143,12 +141,8 @@ class EffectApplier:
             transformed_clip = effect.apply(
                 scene=tmp_scene, strength=self._choose_effect_strength()
             )
-            scene.clip = concatenate_videoclips(
+            scene.clip = combine_video_clips(
                 [clip_before, transformed_clip, clip_after]
-            )
-            scene.clip.audio = combine_audio_clips(
-                [clip_before.audio, transformed_clip.audio, clip_after.audio],
-                clip_before.audio.fps,
             )
         if scene.clip is None:
             raise ValueError

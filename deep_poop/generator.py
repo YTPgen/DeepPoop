@@ -53,6 +53,7 @@ class Generator:
 
     def generate(self):
         scenes = self._scene_cutter.get_scenes(self.video_file)
+        scenes = scenes[:1]
         for s in scenes:
             s.subscenes = self._scene_cutter.find_subscenes(s)
         total_duration = 0

@@ -24,7 +24,21 @@ class Scene:
         self.start = start
         self.end = end
         self.subscenes = subscenes
+        self._clip = None
         self.clip: VideoClip = self._get_scene_clip()
+
+    def __del__(self):
+        self._clip.close()
+
+    @property
+    def clip(self):
+        return self._clip
+
+    @clip.setter
+    def clip(self, clip: VideoClip):
+        if self._clip is not None:
+            self._clip.close()
+        self._clip = clip.copy()
 
     def _get_scene_clip(self):
         video: VideoClip = VideoFileClip(self.video_file)
