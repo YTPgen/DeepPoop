@@ -63,21 +63,28 @@ class SceneCutter:
             )
         self._scene_threshold = val
 
-    def get_scenes(self, video_file: str):
-        return self.split_scenes(
+    def get_scenes(self, video_clip: VideoClip, video_file: str):
+        scenes = []
+        scene_times = self.split_scenes(
             video_file=video_file,
             threshold=self.scene_threshold,
             min_len=self.scene_min_len,
         )
-
-    def find_subscenes(self, scene: Scene):
-        return self.split_scenes(
-            video_file=scene.video_file,
-            threshold=self.subscene_threshold,
-            min_len=self.subscene_min_len,
-            start=scene.start,
-            end=scene.end,
-        )
+        for start, end in scene_times:
+            next_scene = Scene(video_clip=video_clip.subclip(start, end))
+            subscene_times = self.split_scenes(
+                video_file=video_file,
+                threshold=self.subscene_threshold,
+                min_len=self.subscene_min_len,
+                start=start,
+                end=end,
+            )
+            next_scene.subscenes = [
+                Scene(video_clip.subclip(ss_start, ss_end))
+                for ss_start, ss_end in subscene_times
+            ]
+            scenes.append(next_scene)
+        return scenes
 
     def split_scenes(
         self,
@@ -112,13 +119,8 @@ class SceneCutter:
                 )
             video_manager.start()
             scene_manager.detect_scenes(frame_source=video_manager)
-            scene_list = scene_manager.get_scene_list(base_timecode)
-            for s in scene_list:
-                scenes.append(
-                    Scene(
-                        video_file=video_file, start=s[0].frame_num, end=s[1].frame_num
-                    )
-                )
+            scenes = scene_manager.get_scene_list(base_timecode)
+            scenes = [(s[0].get_seconds(), s[1].get_seconds()) for s in scenes]
         finally:
             video_manager.release()
         return scenes

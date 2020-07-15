@@ -1,4 +1,5 @@
 from typing import List
+import math
 
 from moviepy.editor import VideoFileClip, VideoClip
 from face_feature_recognizer.face_feature_recognizer import FaceFeatureRecognizer
@@ -11,38 +12,15 @@ class Scene:
     """Metadata about a scene in a video.
 
     Args:
-        video_file (str): Filename of video file scene is in
-        start (float): Start frame of scene
-        end (float): End frame of scene
+        video_clip (VideoClip): Video clip of scene
         subscenes (List[Scene], optional): List of subscenes in scene. Defaults to empty list.
     """
 
     def __init__(
-        self, video_file: str, start: float, end: float, subscenes: "List[Scene]" = [],
+        self, video_clip: VideoClip, subscenes: "List[Scene]" = [],
     ):
-        self.video_file = video_file
-        self.start = start
-        self.end = end
         self.subscenes = subscenes
-        self._clip = None
-        self.clip: VideoClip = self._get_scene_clip()
-
-    def __del__(self):
-        self._clip.close()
-
-    @property
-    def clip(self):
-        return self._clip
-
-    @clip.setter
-    def clip(self, clip: VideoClip):
-        if self._clip is not None:
-            self._clip.close()
-        self._clip = clip.copy()
-
-    def _get_scene_clip(self):
-        video: VideoClip = VideoFileClip(self.video_file)
-        return video.subclip(self.start / video.fps, self.end / video.fps)
+        self.clip = video_clip
 
     def analyze_frames(self) -> List[FullFrame]:
         """Analyzes each frame of scene clip for metadata 
@@ -75,7 +53,7 @@ class Scene:
         Returns:
             float: Length of scene in seconds
         """
-        return self.frame_length() / self.clip.fps
+        return self.clip.duration
 
     def frame_length(self) -> int:
         """Gets amount of frames in scene
@@ -83,26 +61,24 @@ class Scene:
         Returns:
             int: Amount of frames in scene
         """
-        return self.end - self.start
+        return math.ceil(self.clip.duration * self.clip.fps)
 
-    def copy(self):
-        """Returns a copy of this scene
+    def subscene(self, start: float, end: float):
+        """Returns a subscene of this scene with shorter or equal clip duration.
+
+        Args:
+            start (float): Start offset in seconds
+            end (float): End time of scene in seconds
 
         Returns:
-            Scene: Distinct copy of scene
+            Scene: Subscene of this scene 
         """
-        scene_copy = Scene(video_file=self.video_file, start=self.start, end=self.end)
-        scene_copy.frames = self.frames
-        return scene_copy
-
-    def subclip(self, start, end):
-        start = int(start)
-        end = int(end)
-        new_frames = self.frames[start - self.start : end - self.start]
-        if len(new_frames) == 0:
-            print("Uhoh")
-        self.frames = new_frames
-        self.start = start
-        self.end = end
-        self.clip: VideoClip = self._get_scene_clip()
-        return self
+        start = max(0, start)
+        end = min(self.clip.duration, end)
+        start_frame = int(round(start * self.clip.fps))
+        end_frame = int(round(end * self.clip.fps))
+        subscene = Scene(video_clip=self.clip.subclip(start, end))
+        # Hack to disable close as clip would close io reader on deletion
+        subscene.clip.close = lambda *args: None
+        subscene.frames = self.frames[start_frame:end_frame]
+        return subscene
