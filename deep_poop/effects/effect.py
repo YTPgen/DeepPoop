@@ -29,7 +29,7 @@ class Effect:
         max_len: float = 3600,
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
-        compatible_effects: dict = {},
+        neighbors: dict = {},
         standalone=True,
         name=None,
     ):
@@ -39,7 +39,7 @@ class Effect:
         self.max_len = max_len
         self.can_cut = can_cut
         self.length_distribution = length_distribution
-        self._compatible_effects = compatible_effects
+        self.neighbors = neighbors
         self.standalone = standalone
         if len(self.compatible_effects()) == 0 and not self.standalone:
             raise Exception(
@@ -49,10 +49,13 @@ class Effect:
 
     def compatible_effects(self):
         # TODO: Could be special case if no connections or global conf to connect all
-        return list(self._compatible_effects.keys())
+        return list(self.neighbors.keys())
 
-    def name(self):
-        return self.__class__.__name__
+    def get_neighbors(self):
+        return self.neighbors
+
+    def set_neighbor(self, effect_type, weight: float):
+        self.neighbors[effect_type] = weight
 
     def initialize_effect(self, strength: float):
         """Any initialization that needs to take place when effect is used.
@@ -102,10 +105,9 @@ class Effect:
         Returns:
             float: Weight of edge to effect
         """
-        other_type = type(effect)
-        if other_type not in self._compatible_effects:
+        if effect.name not in self.neighbors:
             return 0
-        return self._compatible_effects[other_type]
+        return self.neighbors[effect.name]
 
     @abc.abstractmethod
     def effect_function(self, scene: Scene) -> VideoClip:

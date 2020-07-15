@@ -81,21 +81,28 @@ class EffectApplier:
             _time_until_next_effect > 0
             and _time_until_next_effect > scene.length() - self.min_effect_length
         ):
-            self.intensity -= self._intensity_loss(scene.length())
-            return scene.clip
-        self._set_next_effect_trigger_threshold()
-        if _time_until_next_effect > 0:
-            scene_before = scene.subscene(start=0, end=_time_until_next_effect)
-            edited_scene = scene.subscene(
-                start=_time_until_next_effect, end=scene.length(),
-            )
-            self._process_scene_effects(edited_scene)
-            edited_clip = combine_video_clips([scene_before.clip, edited_scene.clip])
-            return edited_clip
+            print(f"INFO: No effect applied")
+            intensity_loss = self._intensity_loss(scene.length())
+            print(f"INFO: Intensity reduced by {intensity_loss}")
+            self.intensity -= intensity_loss
+            edited_clip = scene.clip
         else:
-            edited_scene = scene.subscene(start=0, end=scene.length())
-            self._process_scene_effects(edited_scene)
-            return edited_scene.clip
+            self._set_next_effect_trigger_threshold()
+            if _time_until_next_effect > 0:
+                scene_before = scene.subscene(start=0, end=_time_until_next_effect)
+                edited_scene = scene.subscene(
+                    start=_time_until_next_effect, end=scene.length(),
+                )
+                self._process_scene_effects(edited_scene)
+                edited_clip = combine_video_clips(
+                    [scene_before.clip, edited_scene.clip]
+                )
+            else:
+                edited_scene = scene.subscene(start=0, end=scene.length())
+                self._process_scene_effects(edited_scene)
+                edited_clip = edited_scene.clip
+            print(f"INFO: Current intensity {self.intensity}/{self.max_intensity}")
+        return edited_clip
 
     def _process_scene_effects(self, scene: Scene):
         self._select_effects(scene)
@@ -114,24 +121,15 @@ class EffectApplier:
 
     def _apply_effect(self, scene: Scene, effect: Effect) -> VideoClip:
         scene_length = scene.length()
-        effect_length = effect.effect_length(scene_length)
-        if effect_length <= 0:
-            print(
-                f"WARNING: Effect length less than or equals zero. Skipping {effect.name}"
-            )
-            return
+        effect_length = max(effect.effect_length(scene_length), 1 / scene.clip.fps)
         if effect_length >= scene_length:
-            scene.clip = effect.apply(
+            transformed_clip = scene.clip = effect.apply(
                 scene=scene, strength=self._choose_effect_strength()
             )
         else:
             effect_begin = random.uniform(0, scene_length - effect_length)
             scene_before = scene.subscene(0, effect_begin)
             scene_after = scene.subscene(effect_begin + effect_length, scene_length)
-            if effect_length < 1 / scene.clip.fps:
-                print(
-                    f"WARNING: Effect {effect.name} with duration {effect_length} is shorter than one frame. Skipping..."
-                )
             effect_scene = scene.subscene(
                 start=effect_begin, end=effect_begin + effect_length
             )
@@ -153,6 +151,8 @@ class EffectApplier:
         return random.random()
 
     def can_apply(self, effect: Effect, scene_length: float):
+        if effect in self._effects_to_apply:
+            return False
         if not effect.can_cut and scene_length < effect.min_len:
             return False
         total_intensity = scene_length * effect.intensity
@@ -176,7 +176,7 @@ class EffectApplier:
             usable_effects = [
                 e
                 for e in self.effects
-                if type(e) in self._previous_effect().compatible_effects()
+                if e.name in self._previous_effect().compatible_effects()
                 and self.can_apply(e, scene_length)
             ]
         return usable_effects

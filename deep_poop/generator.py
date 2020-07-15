@@ -56,7 +56,6 @@ class Generator:
         scenes = self._scene_cutter.get_scenes(
             video_clip=main_video, video_file=self.video_file
         )
-        scenes = scenes[:1]
         total_duration = 0
         ytp_clips = []
         while len(scenes) > 0 and total_duration < self.length:
@@ -79,7 +78,7 @@ class Generator:
                         f"WARNING: Skipped subscene as length {len(subscene.frames)} is shorter than minimum"
                     )
                     continue
-                print(f"Applying effect at {total_duration}")
+                print(f"INFO: Processing subscene at {total_duration}")
                 new_clip = self._effect_applier.feed_scene(subscene)
                 ytp_clips.append(new_clip)
                 total_duration += new_clip.duration
