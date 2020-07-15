@@ -4,9 +4,9 @@ import copy
 import numpy as np
 import math
 
-from moviepy.editor import VideoClip, concatenate_videoclips
+from moviepy.editor import VideoClip
 
-from deep_poop.effects.utils import combine_audio_clips
+from deep_poop.utils import combine_video_clips
 from deep_poop.scene import Scene
 from deep_poop.effects.effect import Effect
 from deep_poop.config import SELECTION_SCORE_WEIGHT, NEIGHBOR_SCORE_WEIGHT
@@ -83,22 +83,17 @@ class EffectApplier:
         ):
             self.intensity -= self._intensity_loss(scene.length())
             return scene.clip
-        edited_scene = scene.copy()
         self._set_next_effect_trigger_threshold()
         if _time_until_next_effect > 0:
-            edited_scene.subclip(
-                start=edited_scene.start
-                + edited_scene.clip.fps * _time_until_next_effect,
-                end=edited_scene.end,
+            scene_before = scene.subscene(start=0, end=_time_until_next_effect)
+            edited_scene = scene.subscene(
+                start=_time_until_next_effect, end=scene.length(),
             )
             self._process_scene_effects(edited_scene)
-            clip_before = scene.clip.subclip(0, _time_until_next_effect)
-            edited_clip = concatenate_videoclips([clip_before, edited_scene.clip])
-            edited_clip.audio = combine_audio_clips(
-                [clip_before.audio, edited_scene.clip.audio], clip_before.audio.fps
-            )
+            edited_clip = combine_video_clips([scene_before.clip, edited_scene.clip])
             return edited_clip
         else:
+            edited_scene = scene.subscene(start=0, end=scene.length())
             self._process_scene_effects(edited_scene)
             return edited_scene.clip
 
@@ -131,24 +126,20 @@ class EffectApplier:
             )
         else:
             effect_begin = random.uniform(0, scene_length - effect_length)
-            clip_before = scene.clip.subclip(0, effect_begin)
-            clip_after = scene.clip.subclip(effect_begin + effect_length, scene_length)
-            start_frame = math.floor(scene.start + effect_begin * scene.clip.fps)
-            end_frame = math.ceil(
-                scene.start + (effect_begin + effect_length) * scene.clip.fps
+            scene_before = scene.subscene(0, effect_begin)
+            scene_after = scene.subscene(effect_begin + effect_length, scene_length)
+            if effect_length < 1 / scene.clip.fps:
+                print(
+                    f"WARNING: Effect {effect.name} with duration {effect_length} is shorter than one frame. Skipping..."
+                )
+            effect_scene = scene.subscene(
+                start=effect_begin, end=effect_begin + effect_length
             )
-            if start_frame == end_frame:
-                print(f"WARNING: Effect {effect.name} is 0 frames long. Skipping...")
-            tmp_scene = scene.copy().subclip(start_frame, end_frame)
             transformed_clip = effect.apply(
-                scene=tmp_scene, strength=self._choose_effect_strength()
+                scene=effect_scene, strength=self._choose_effect_strength()
             )
-            scene.clip = concatenate_videoclips(
-                [clip_before, transformed_clip, clip_after]
-            )
-            scene.clip.audio = combine_audio_clips(
-                [clip_before.audio, transformed_clip.audio, clip_after.audio],
-                clip_before.audio.fps,
+            scene.clip = combine_video_clips(
+                [scene_before.clip, transformed_clip, scene_after.clip]
             )
         if scene.clip is None:
             raise ValueError

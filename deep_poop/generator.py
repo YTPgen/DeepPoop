@@ -4,7 +4,7 @@ from moviepy.editor import VideoFileClip, concatenate_videoclips
 from deep_poop.scene_cutter import SceneCutter
 from deep_poop.effect_applier import EffectApplier
 from deep_poop.effect_list import EFFECTS
-from deep_poop.effects.utils import combine_audio_clips
+from deep_poop.utils import combine_audio_clips
 
 
 class Generator:
@@ -29,7 +29,7 @@ class Generator:
         subscene_threshold: float,
         length: float,
         scene_min_len: int = 600,
-        subscene_min_len: int = 120,
+        subscene_min_len: int = 90,
         abruptness: float = 0.2,
         reuse: bool = True,
         downscale: float = None,
@@ -52,9 +52,11 @@ class Generator:
         self.abruptness = abruptness
 
     def generate(self):
-        scenes = self._scene_cutter.get_scenes(self.video_file)
-        for s in scenes:
-            s.subscenes = self._scene_cutter.find_subscenes(s)
+        main_video = VideoFileClip(self.video_file)
+        scenes = self._scene_cutter.get_scenes(
+            video_clip=main_video, video_file=self.video_file
+        )
+        scenes = scenes[:1]
         total_duration = 0
         ytp_clips = []
         while len(scenes) > 0 and total_duration < self.length:

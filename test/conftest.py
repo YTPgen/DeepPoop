@@ -14,12 +14,12 @@ test_clip = os.path.join(current_dir, "clips", test_clip_name)
 
 @pytest.fixture(scope="function")
 def clip():
-    return VideoFileClip(test_clip)
+    return VideoFileClip(test_clip).subclip(0, 0.2)
 
 
 @pytest.fixture(scope="function")
-def scene():
-    s = Scene(video_file=test_clip, start=0, end=3)
+def scene(clip):
+    s = Scene(video_clip=clip)
     s.analyze_frames()
     return s
 
