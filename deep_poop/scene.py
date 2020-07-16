@@ -73,8 +73,8 @@ class Scene:
         Returns:
             Scene: Subscene of this scene 
         """
-        start = max(0, start)
-        end = min(self.clip.duration, end)
+        end = max(min(self.clip.duration, end), 1 / self.clip.fps)
+        start = min(max(0, start), end - 1 / self.clip.fps)
         start_frame = int(round(start * self.clip.fps))
         end_frame = int(round(end * self.clip.fps))
         subscene = Scene(video_clip=self.clip.subclip(start, end))

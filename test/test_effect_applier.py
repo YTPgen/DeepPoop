@@ -18,7 +18,7 @@ def dummy_effect():
     return dummy_effect
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def effect_applier(dummy_effect):
     return EffectApplier(max_intensity=20, easy_start=0, effects=[dummy_effect])
 
