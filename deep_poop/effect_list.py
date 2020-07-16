@@ -14,9 +14,15 @@ def set_bidirectional(effect_list: List[effects.Effect]):
     return effect_list
 
 
-# TODO: Fix effects to not go back to previous ones unless so configured
-
 EFFECTS = [
+    effects.Shake(
+        min_strength=4,
+        max_strength=100,
+        min_len=0.5,
+        max_len=2.0,
+        intensity=2.1,
+        neighbors={"Zoom": 1, "Rotate": 1.5, "Echo": 0.7},
+    ),
     effects.Scramble(
         min_scramble_frame_length=1,
         max_scramble_frame_length=3,
