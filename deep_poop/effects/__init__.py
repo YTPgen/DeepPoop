@@ -7,3 +7,4 @@ from deep_poop.effects.pixelate import Pixelate
 from deep_poop.effects.rotate import Rotate
 from deep_poop.effects.zoom import Zoom
 from deep_poop.effects.shake import Shake
+from deep_poop.effects.robotify import Robotify

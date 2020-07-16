@@ -15,6 +15,12 @@ def set_bidirectional(effect_list: List[effects.Effect]):
 
 
 EFFECTS = [
+    effects.Robotify(
+        min_freq=2,
+        max_freq=20,
+        intensity=2.2,
+        neighbors={"Invert": 1, "Pixelate": 2, "StretchY": 1.35},
+    ),
     effects.Shake(
         min_strength=4,
         max_strength=100,
