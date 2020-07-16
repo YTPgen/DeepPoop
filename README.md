@@ -5,31 +5,56 @@
 # DeepPoop
 GUI and components for generating YTP videos
 
-# First version spec
+## Quickstart
 
-The first version of DeepPoop should be able to perform the basic functions of
-tranforming a video clip into a YTP video with applied effects. It should be
-able to:
+```bash
+# Run generator with parameters
+python generate.py --video_file=my_clip.mp4 \
+--scene_threshold=70 \
+--subscene_threshold=40 \
+--length=15 \
+--max-intensity=70 \
+--reuse=False \
+--abruptness=0.1 \
+generate
+```
 
-* Read video files and detect scenes in them
-* Find sub-scenes that have appropriate length and content for applying a YTP
-  effect
-* Feed sub-scenes to an *EffectApplier* that determines an effect to apply and
-  returns the transformed sub-scene
-* Concatenate transformed YTP scenes into a final video clip
-* Save final video clip to video file
-* Allow for several parameters to tweak result
+### Parameters
+
+* **`video_file`**: Path to video file
+* **`scene_threshold`**: Threshold at which to split video clip into scenes *(0-100)*
+* **`subscene_threshold`**: Threshold at which to split scenes into subscenes that effects are applied to *(0-100)*
+* **`length`**: Total length of final video in seconds (Final length cannot not be longer than original if **`reuse`** is set to **`False`**)
+* **`scene_min_len`**: Minimum length in frames of a scene - Default: **`600`**
+* **`subscene_min_len`**: Minimum length in frames of a subscene - Default: **`90`**
+* **`abruptness`**: How likely a scene is to end after each subscene *(0-1)* - Default: **`0.2`**
+* **`reuse`**: Whether to allow reuse of same scenes - Default: `True`
+* **`max_intensity`**: Maximum intensity of final video. Intensity controls which effects are applied, how often and how many - Default: **`20`**
+* **`easy_start`**: Sets an initial intensity to allow for a gentle start - Default: **`0`**
+* **`downscale`**: Downscale factor when performing scene detection. If not specified detect value automatically 
 
 ## Components
 
 * GUI - For tweaking parameters and choosing video file
 * SceneCutter - splits video into scenes and subscenes
 * EffectApplier - Applies an appropriate effect to a subscene (might be no effect)
-* ytp_effects - Library containing effect implementations
 * Generator - Main class responsible for application flow
 
 ## Linux installs
 
 ```bash
 sudo apt-get install build-essential libsndfile1. cmake libsm6 libxext6 libxrender-dev ffmpeg 
+```
+
+## Effect Previews
+
+To preview what happens when applying an effect with certain parameters `effect_preview.py` can be used. Just pass the name of the effect and any necessary parameters for `Effect` initialization.
+
+### Example
+
+```bash
+# First argument is name of the effect (case sensitive) and second is the strength 0-1 followed by any kwargs of the effect
+python effect_preview.py Rotate 0.2 --min_speed=0.5 --max_speed=3
+# Strength can be emitted for a value of 1 by default
+python effect_preview.py Rotate --min_speed=0.5 --max_speed=3
 ```

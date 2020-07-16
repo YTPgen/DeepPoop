@@ -5,10 +5,11 @@ import deep_poop.effects
 from deep_poop.scene import Scene
 
 test_scene_file = "test/clips/sup_bro.mp4"
+clip_length = 3.5
 
 
 def get_test_scene():
-    clip = VideoFileClip(test_scene_file)
+    clip = VideoFileClip(test_scene_file).subclip(0, clip_length)
     test_scene = Scene(clip)
     test_scene.analyze_frames()
     return test_scene
