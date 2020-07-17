@@ -12,7 +12,7 @@ from deep_poop.scene import Scene
 
 
 class Rotate(effect.ImageEffect):
-    """Pixelates images in a video.
+    """Rotates images in a video.
 
     Args:
         min_speed (float): Minimum rotations per second
