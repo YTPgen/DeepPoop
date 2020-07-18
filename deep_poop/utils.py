@@ -8,7 +8,6 @@ def combine_video_clips(video_clips):
     video_clip.audio = combine_audio_clips(
         [c.audio for c in video_clips], video_clips[0].audio.fps,
     )
-    [c.close() for c in video_clips]
     return video_clip
 
 
