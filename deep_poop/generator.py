@@ -111,6 +111,7 @@ class Generator:
         scenes = self._scene_cutter.get_scenes(
             video_clip=main_video, video_file=self.video_file
         )
+        scenes = scenes[:1]
         if not self.reuse:
             self.length = min(self.length, main_video.duration)
         total_duration = 0
@@ -122,13 +123,19 @@ class Generator:
                         random.randint(0, len(scenes) - 1) if len(scenes) > 1 else 0
                     )
                     current_scene = scenes[next_i] if self.reuse else scenes.pop(next_i)
+                    print(f"DEBUG: Creating scene at time {total_duration}")
                     next_clip = self.ytp_clip_from_scene(current_scene)
+                    print(f"INFO: Created clip of duration {next_clip.duration}s")
                     if next_clip is not None:
                         total_duration += next_clip.duration
                         next_clip.write_videofile(
-                            os.path.join(tmpdir, f"{current_clip_index}.mp4")
+                            os.path.join(tmpdir, f"{current_clip_index}.mp4"),
+                            logger=None,
                         )
                         current_clip_index += 1
+                output_video = self.combine(tmpdir)
+                output_video = output_video.subclip(0, self.length)
+                output_video.write_videofile(self.out_file)
             except Exception as e:
                 backup_folder = "backup_clips"
                 os.rmdir(backup_folder)
@@ -136,6 +143,3 @@ class Generator:
                     f"ERROR: Caught exception {e}. Saving clips produced so far to {backup_folder}..."
                 )
                 shutil.copytree(tmpdir, backup_folder)
-            output_video = self.combine(tmpdir)
-            output_video = output_video.subclip(0, self.length)
-            output_video.write_videofile(self.out_file)
