@@ -12,8 +12,8 @@ from deep_poop.effects.effect import Effect
 from deep_poop.config import SELECTION_SCORE_WEIGHT, NEIGHBOR_SCORE_WEIGHT
 
 # TODO: Move to conf
-A = -1 / 400
-B = -1 / 20
+A = -1 / 70
+B = -1 / 25
 
 
 class EffectApplier:
@@ -29,10 +29,12 @@ class EffectApplier:
         self.effects = effects
         self.min_effect_length = min_effect_length
         self._effects_to_apply = []
-        self._next_effect_intensity_threshold = max(1 - easy_start, 0)
+        self._next_effect_intensity_threshold = (
+            max(1 - easy_start, 0) * self.max_intensity
+        )
 
     def _set_next_effect_trigger_threshold(self):
-        self._next_effect_intensity_threshold = random.random()
+        self._next_effect_intensity_threshold = random.random() * self.max_intensity
 
     def _time_until_next_effect(self):
         current_point = self._intensity_to_time(self.intensity)
@@ -53,12 +55,14 @@ class EffectApplier:
             return True
         return self.intensity < self.max_intensity
 
+    def _add_intensity(self, amount: float):
+        self.intensity = min(self.intensity + amount, self.max_intensity)
+
     def _time_to_intensity(self, time: float) -> float:
-        return (time ** 2) * A + time * B
+        return (1 + (time ** 2) * A + time * B) * self.max_intensity
 
     def _intensity_to_time(self, intensity: float) -> float:
-        if intensity > self.max_intensity:
-            return -1
+        intensity = min(intensity, self.max_intensity)
         r = B ** 2 - 4 * A * (1 - intensity / self.max_intensity)
         return ((-B) - math.sqrt(r)) / (2 * A)
 
@@ -73,7 +77,7 @@ class EffectApplier:
         """
         x1 = max(self._intensity_to_time(self.intensity), 0)
         x2 = x1 + time
-        return self.intensity - self._time_to_intensity(x2) * self.max_intensity
+        return self.intensity - self._time_to_intensity(x2)
 
     def feed_scene(self, scene: Scene) -> VideoClip:
         _time_until_next_effect = self._time_until_next_effect()
@@ -143,7 +147,7 @@ class EffectApplier:
             raise ValueError
         print(f"INFO: Applied {effect.name}")
         intensity_cost = effect_length * effect.intensity
-        self.intensity += effect_length * effect.intensity
+        self._add_intensity(intensity_cost)
         print(f"INFO: Added {intensity_cost} intensity")
         return transformed_clip
 

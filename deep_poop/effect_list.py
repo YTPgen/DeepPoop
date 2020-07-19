@@ -15,9 +15,21 @@ def set_bidirectional(effect_list: List[effects.Effect]):
 
 
 EFFECTS = [
+    effects.OscillatingRobotify(
+        min_freq=2,
+        max_freq=300,
+        min_oscillation=50,
+        max_oscillation=500,
+        min_len=2,
+        max_len=4,
+        intensity=2.5,
+        neighbors={"Invert": 1.5, "Scramble": 1, "StretchY": 1.5},
+    ),
     effects.Robotify(
         min_freq=2,
         max_freq=20,
+        min_len=1,
+        max_len=4,
         intensity=2.2,
         neighbors={"Invert": 1, "Pixelate": 2, "StretchY": 1.35},
     ),
@@ -43,8 +55,8 @@ EFFECTS = [
     effects.Pixelate(
         min_strength=4,
         max_strength=12,
-        intensity=1.7,
-        max_len=4,
+        intensity=4.7,
+        max_len=1.2,
         length_distribution=EffectLengthDistribution.RANDOM,
         neighbors={"StretchX": 1},
         standalone=False,
@@ -93,13 +105,15 @@ EFFECTS = [
         delay=0.1,
         strength=0.7,
         intensity=1.4,
-        max_len=5,
+        min_len=2,
+        max_len=3.7,
         length_distribution=EffectLengthDistribution.NORMAL,
         neighbors={"Rotate": 1},
     ),
     effects.Invert(
-        intensity=1.8,
-        max_len=2.5,
+        intensity=2.8,
+        min_len=1,
+        max_len=2,
         length_distribution=EffectLengthDistribution.RANDOM,
         standalone=False,
         neighbors={"Echo": 1},

@@ -10,6 +10,7 @@ GUI and components for generating YTP videos
 ```bash
 # Run generator with parameters
 python generate.py --video_file=my_clip.mp4 \
+--out_file=my_ytp.mp4 \
 --scene_threshold=70 \
 --subscene_threshold=40 \
 --length=15 \
@@ -22,6 +23,7 @@ generate
 ### Parameters
 
 * **`video_file`**: Path to video file
+* **`out_file`** Filename of produced YTP video
 * **`scene_threshold`**: Threshold at which to split video clip into scenes *(0-100)*
 * **`subscene_threshold`**: Threshold at which to split scenes into subscenes that effects are applied to *(0-100)*
 * **`length`**: Total length of final video in seconds (Final length cannot not be longer than original if **`reuse`** is set to **`False`**)

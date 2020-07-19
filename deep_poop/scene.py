@@ -21,6 +21,7 @@ class Scene:
     ):
         self.subscenes = subscenes
         self.clip = video_clip
+        self.frames = []
 
     def analyze_frames(self) -> List[FullFrame]:
         """Analyzes each frame of scene clip for metadata 
