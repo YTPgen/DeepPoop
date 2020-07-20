@@ -32,7 +32,7 @@ class Pitch(effect.Effect):
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_file = os.path.join(tmpdir, "tmp.wav")
             pitched_file = os.path.join(tmpdir, "pitched.wav")
-            audio.write_audiofile(tmp_file)
+            audio.write_audiofile(tmp_file, logger=None)
             y, sr = librosa.core.load(tmp_file, audio.fps)
             y_shifted = librosa.effects.pitch_shift(y, sr, n_steps=self.steps)
             librosa.output.write_wav(pitched_file, y_shifted, sr)

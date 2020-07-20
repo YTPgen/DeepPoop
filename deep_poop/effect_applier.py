@@ -23,6 +23,7 @@ class EffectApplier:
         effects: List[Effect],
         easy_start: float = 0,
         min_effect_length: float = 1.0,
+        max_simultaneous_effects=4,
     ):
         self.intensity = easy_start
         self.max_intensity = max_intensity
@@ -32,9 +33,11 @@ class EffectApplier:
         self._next_effect_intensity_threshold = (
             max(1 - easy_start, 0) * self.max_intensity
         )
+        self.last_effect_length = 0
+        self.max_simultaneous_effects = max_simultaneous_effects
 
     def _set_next_effect_trigger_threshold(self):
-        self._next_effect_intensity_threshold = random.random() * self.max_intensity
+        self._next_effect_intensity_threshold = random.random() * self.intensity
 
     def _time_until_next_effect(self):
         current_point = self._intensity_to_time(self.intensity)
@@ -53,6 +56,8 @@ class EffectApplier:
             and len(self._effects_to_apply) == 1
         ):
             return True
+        if len(self._effects_to_apply) >= self.max_simultaneous_effects:
+            return False
         return self.intensity < self.max_intensity
 
     def _add_intensity(self, amount: float):
@@ -80,39 +85,64 @@ class EffectApplier:
         return self.intensity - self._time_to_intensity(x2)
 
     def feed_scene(self, scene: Scene) -> VideoClip:
-        _time_until_next_effect = self._time_until_next_effect()
-        if (
-            _time_until_next_effect > 0
-            and _time_until_next_effect > scene.length() - self.min_effect_length
+        _time_until_next_effect = max(self._time_until_next_effect(), 0)
+        current_point_in_scene = 0
+        edited_scene = scene.subscene(0, scene.clip.duration)
+        times_edited = 0
+        while (
+            _time_until_next_effect + current_point_in_scene
+            <= scene.length() - self.min_effect_length
         ):
-            print(f"INFO: No effect applied")
-            intensity_loss = self._intensity_loss(scene.length())
-            print(f"INFO: Intensity reduced by {intensity_loss}")
-            self.intensity -= intensity_loss
-            edited_clip = scene.clip
-        else:
             self._set_next_effect_trigger_threshold()
+            current_point_in_scene += _time_until_next_effect
+            print(
+                f"DEBUG: Applying effects at point {current_point_in_scene}s in scene"
+            )
             if _time_until_next_effect > 0:
-                scene_before = scene.subscene(start=0, end=_time_until_next_effect)
-                edited_scene = scene.subscene(
-                    start=_time_until_next_effect, end=scene.length(),
+                scene_before = edited_scene.subscene(
+                    start=0, end=current_point_in_scene,
                 )
-                self._process_scene_effects(edited_scene)
-                edited_clip = combine_video_clips(
-                    [scene_before.clip, edited_scene.clip]
+                effect_scene = edited_scene.subscene(
+                    start=current_point_in_scene, end=scene.length(),
+                )
+                self._process_scene_effects(effect_scene)
+                edited_scene.clip = combine_video_clips(
+                    [scene_before.clip, effect_scene.clip]
                 )
             else:
-                edited_scene = scene.subscene(start=0, end=scene.length())
                 self._process_scene_effects(edited_scene)
-                edited_clip = edited_scene.clip
             print(f"INFO: Current intensity {self.intensity}/{self.max_intensity}")
-        return edited_clip
+            current_point_in_scene += self.last_effect_length
+            _time_until_next_effect = self._time_until_next_effect()
+            times_edited += 1
+        if times_edited == 0:
+            print(f"INFO: No effect applied")
+        intensity_loss = self._intensity_loss(scene.length() - current_point_in_scene)
+        print(f"INFO: Intensity reduced by {intensity_loss}")
+        self.intensity -= intensity_loss
+        return edited_scene.clip
 
     def _process_scene_effects(self, scene: Scene):
         self._select_effects(scene)
+        if self._effects_to_apply == []:
+            print("INFO: No effects could be applied to scene")
+            return
+        effect_lengths = [
+            max(effect.effect_length(scene.length()), 1 / scene.clip.fps)
+            for effect in self._effects_to_apply
+        ]
+        longest_effect_duration = max(effect_lengths)
+        effect_scene = scene.subscene(0, longest_effect_duration)
+        scene_after = scene.subscene(longest_effect_duration, scene.length())
         while len(self._effects_to_apply) > 0:
             next_effect = self._effects_to_apply.pop()
-            self._apply_effect(scene, next_effect)
+            duration = effect_lengths.pop()
+            self._apply_effect(effect_scene, next_effect, duration)
+            intensity_cost = duration * next_effect.intensity
+            self._add_intensity(intensity_cost)
+            # print(f"DEBUG: Added {intensity_cost} intensity")
+        scene.clip = combine_video_clips([effect_scene.clip, scene_after.clip])
+        self.last_effect_length = longest_effect_duration
 
     def _select_effects(self, scene: Scene):
         self._effects_to_apply = []
@@ -123,19 +153,18 @@ class EffectApplier:
             next_effect = self._select_effect(effects=usable_effects, scene=scene)
             self._effects_to_apply.append(next_effect)
 
-    def _apply_effect(self, scene: Scene, effect: Effect) -> VideoClip:
+    def _apply_effect(self, scene: Scene, effect: Effect, duration: float) -> VideoClip:
         scene_length = scene.length()
-        effect_length = max(effect.effect_length(scene_length), 1 / scene.clip.fps)
-        if effect_length >= scene_length:
+        if duration >= scene_length:
             transformed_clip = scene.clip = effect.apply(
                 scene=scene, strength=self._choose_effect_strength()
             )
         else:
-            effect_begin = random.uniform(0, scene_length - effect_length)
+            effect_begin = random.uniform(0, scene_length - duration)
             scene_before = scene.subscene(0, effect_begin)
-            scene_after = scene.subscene(effect_begin + effect_length, scene_length)
+            scene_after = scene.subscene(effect_begin + duration, scene_length)
             effect_scene = scene.subscene(
-                start=effect_begin, end=effect_begin + effect_length
+                start=effect_begin, end=effect_begin + duration
             )
             transformed_clip = effect.apply(
                 scene=effect_scene, strength=self._choose_effect_strength()
@@ -145,10 +174,7 @@ class EffectApplier:
             )
         if scene.clip is None:
             raise ValueError
-        print(f"INFO: Applied {effect.name}")
-        intensity_cost = effect_length * effect.intensity
-        self._add_intensity(intensity_cost)
-        print(f"INFO: Added {intensity_cost} intensity")
+        print(f"INFO: Applied {effect.name} with length {duration}s")
         return transformed_clip
 
     def _choose_effect_strength(self):

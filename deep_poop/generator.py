@@ -75,6 +75,7 @@ class Generator:
             if subscene.clip is None or subscene.clip.audio is None:
                 print(f"Subscene has corrupted clip data. Skipping...")
                 continue
+            print(f"DEBUG: Handling subscene with length {subscene.length()}")
             if subscene.frames == []:
                 subscene.analyze_frames()
             # Ugly fix as scenecutter does not seem to respect minimum length
@@ -84,6 +85,9 @@ class Generator:
                 )
                 continue
             new_clip = self._effect_applier.feed_scene(subscene)
+            print(
+                f"DEBUG: Finished applying effects on clip with duration {new_clip.duration}"
+            )
             subclips.append(new_clip)
         if len(subclips) == 0:
             return None
