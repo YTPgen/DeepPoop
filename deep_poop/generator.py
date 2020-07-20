@@ -111,7 +111,6 @@ class Generator:
         scenes = self._scene_cutter.get_scenes(
             video_clip=main_video, video_file=self.video_file
         )
-        scenes = scenes[:1]
         if not self.reuse:
             self.length = min(self.length, main_video.duration)
         total_duration = 0
@@ -138,8 +137,9 @@ class Generator:
                 output_video.write_videofile(self.out_file)
             except Exception as e:
                 backup_folder = "backup_clips"
-                os.rmdir(backup_folder)
+                shutil.rmtree(backup_folder)
                 print(
                     f"ERROR: Caught exception {e}. Saving clips produced so far to {backup_folder}..."
                 )
                 shutil.copytree(tmpdir, backup_folder)
+                raise e

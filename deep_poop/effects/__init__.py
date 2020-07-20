@@ -9,3 +9,4 @@ from deep_poop.effects.zoom import Zoom
 from deep_poop.effects.shake import Shake
 from deep_poop.effects.robotify import Robotify
 from deep_poop.effects.robotify import OscillatingRobotify
+from deep_poop.effects.pitch import Pitch

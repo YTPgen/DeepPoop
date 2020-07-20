@@ -15,6 +15,24 @@ def set_bidirectional(effect_list: List[effects.Effect]):
 
 
 EFFECTS = [
+    effects.Pitch(
+        min_steps=7,
+        max_steps=30,
+        min_len=1.2,
+        max_len=2.5,
+        intensity=2.7,
+        neighbors={"StretchY": 1, "ZoomOut": 1.5},
+        name="PitchUp",
+    ),
+    effects.Pitch(
+        min_steps=-7,
+        max_steps=-20,
+        min_len=1.7,
+        max_len=3.2,
+        intensity=2.3,
+        neighbors={"Zoom": 1, "Invert": 1.5, "Pixelate": 1.2},
+        name="PitchUp",
+    ),
     effects.OscillatingRobotify(
         min_freq=2,
         max_freq=300,
@@ -62,13 +80,21 @@ EFFECTS = [
         standalone=False,
     ),
     effects.Zoom(
-        min_factor=0.4,
+        min_factor=1.8,
         max_factor=3,
         intensity=0.8,
         min_len=0.3,
         max_len=3.0,
         length_distribution=EffectLengthDistribution.RANDOM,
         neighbors={"Rotate": 1, "Invert": 2},
+    ),
+    effects.Zoom(
+        min_factor=0.1,
+        max_factor=0.5,
+        intensity=1.7,
+        min_len=0.3,
+        max_len=2.0,
+        name="ZoomOut",
     ),
     effects.Zoom(
         min_factor=5,
