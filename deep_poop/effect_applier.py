@@ -8,7 +8,7 @@ from moviepy.editor import VideoClip
 
 from deep_poop.utils import combine_video_clips
 from deep_poop.scene import Scene
-from deep_poop.effects.effect import Effect
+from deep_poop.effects.effect import Effect, EffectType
 from deep_poop.config import SELECTION_SCORE_WEIGHT, NEIGHBOR_SCORE_WEIGHT
 
 # TODO: Move to conf
@@ -154,8 +154,18 @@ class EffectApplier:
     def _choose_effect_strength(self):
         return random.random()
 
+    def _has_audio_effect(self, effects: List[Effect]):
+        for e in effects:
+            if e.type == EffectType.AUDIO:
+                return True
+        return False
+
     def can_apply(self, effect: Effect, scene_length: float):
         if effect in self._effects_to_apply:
+            return False
+        if effect.type == EffectType.AUDIO and self._has_audio_effect(
+            self._effects_to_apply
+        ):
             return False
         if not effect.can_cut and scene_length < effect.min_len:
             return False
