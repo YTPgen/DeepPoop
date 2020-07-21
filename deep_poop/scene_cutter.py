@@ -72,17 +72,17 @@ class SceneCutter:
         )
         for start, end in scene_times:
             next_scene = Scene(video_clip=video_clip.subclip(start, end))
-            subscene_times = self.split_scenes(
-                video_file=video_file,
-                threshold=self.subscene_threshold,
-                min_len=self.subscene_min_len,
-                start=start,
-                end=end,
-            )
-            next_scene.subscenes = [
-                Scene(video_clip.subclip(ss_start, ss_end))
-                for ss_start, ss_end in subscene_times
-            ]
+            # subscene_times = self.split_scenes(
+            #     video_file=video_file,
+            #     threshold=self.subscene_threshold,
+            #     min_len=self.subscene_min_len,
+            #     start=start,
+            #     end=end,
+            # )
+            # next_scene.subscenes = [
+            #     Scene(video_clip.subclip(ss_start, ss_end))
+            #     for ss_start, ss_end in subscene_times
+            # ]
             scenes.append(next_scene)
         return scenes
 

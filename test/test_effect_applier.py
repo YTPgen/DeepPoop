@@ -20,7 +20,9 @@ def dummy_effect():
 
 @pytest.fixture(scope="function")
 def effect_applier(dummy_effect):
-    return EffectApplier(max_intensity=20, easy_start=0, effects=[dummy_effect])
+    return EffectApplier(
+        max_intensity=20, easy_start=0, effects=[dummy_effect], min_effect_length=0.1
+    )
 
 
 def test_effect_applier_skip(effect_applier, scene):
