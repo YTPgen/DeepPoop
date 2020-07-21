@@ -61,34 +61,34 @@ class Generator:
         self.abruptness = abruptness
 
     def ytp_clip_from_scene(self, scene: Scene):
-        subclips = []
-        # TODO: Make so can start in middle
-        from_subscene = 0
-        until_subscene = from_subscene + 1
-        for _ in range(from_subscene, len(scene.subscenes) - 1):
-            if random.random() < self.abruptness:
-                break
-            until_subscene += 1
+        if scene.frames == []:
+            scene.analyze_frames()
+        subscene = scene.subscene(
+            0, scene.length() - scene.length() * random.random() * self.abruptness
+        )
+        if subscene.clip is None or subscene.clip.audio is None:
+            print(f"Subscene has corrupted clip data. Skipping...")
+            return 0
+        print(f"DEBUG: Handling subscene with length {subscene.length()}")
+        # Ugly fix as scenecutter does not seem to respect minimum length
+        if len(subscene.frames) < self._scene_cutter.subscene_min_len:
+            print(
+                f"WARNING: Skipped subscene as length {len(subscene.frames)} is shorter than minimum"
+            )
+            return 0
+        new_clip = self._effect_applier.feed_scene(subscene)
+        print(
+            f"DEBUG: Finished applying effects on clip with duration {new_clip.duration}"
+        )
+        return new_clip
 
-        subscenes = scene.subscenes[from_subscene:until_subscene]
-        for subscene in subscenes:
-            if subscene.clip is None or subscene.clip.audio is None:
-                print(f"Subscene has corrupted clip data. Skipping...")
-                continue
-            if subscene.frames == []:
-                subscene.analyze_frames()
-            # Ugly fix as scenecutter does not seem to respect minimum length
-            if len(subscene.frames) < self._scene_cutter.subscene_min_len:
-                print(
-                    f"WARNING: Skipped subscene as length {len(subscene.frames)} is shorter than minimum"
-                )
-                continue
-            new_clip = self._effect_applier.feed_scene(subscene)
-            subclips.append(new_clip)
-        if len(subclips) == 0:
-            return None
-        scene_clip = combine_video_clips(subclips)
-        return scene_clip
+    def _create_and_save_clip(self, scene: Scene, path: str):
+        new_clip = self.ytp_clip_from_scene(scene)
+        if new_clip == None:
+            return 0
+        new_clip.write_videofile(path)
+        print(f"INFO: Wrote clip of duration {new_clip.duration}s to {path}")
+        return new_clip.duration
 
     def combine(self, dir: str) -> VideoClip:
         """Combines all clips in given directory to one in alphabetical order.
@@ -111,7 +111,6 @@ class Generator:
         scenes = self._scene_cutter.get_scenes(
             video_clip=main_video, video_file=self.video_file
         )
-        scenes = scenes[:1]
         if not self.reuse:
             self.length = min(self.length, main_video.duration)
         total_duration = 0
@@ -123,23 +122,20 @@ class Generator:
                         random.randint(0, len(scenes) - 1) if len(scenes) > 1 else 0
                     )
                     current_scene = scenes[next_i] if self.reuse else scenes.pop(next_i)
-                    print(f"DEBUG: Creating scene at time {total_duration}")
-                    next_clip = self.ytp_clip_from_scene(current_scene)
-                    print(f"INFO: Created clip of duration {next_clip.duration}s")
-                    if next_clip is not None:
-                        total_duration += next_clip.duration
-                        next_clip.write_videofile(
-                            os.path.join(tmpdir, f"{current_clip_index}.mp4"),
-                            logger=None,
-                        )
+                    clip_duration = self._create_and_save_clip(
+                        current_scene, os.path.join(tmpdir, f"{current_clip_index}.mp4")
+                    )
+                    if clip_duration > 0:
+                        total_duration += clip_duration
                         current_clip_index += 1
                 output_video = self.combine(tmpdir)
                 output_video = output_video.subclip(0, self.length)
                 output_video.write_videofile(self.out_file)
             except Exception as e:
                 backup_folder = "backup_clips"
-                os.rmdir(backup_folder)
+                shutil.rmtree(backup_folder, ignore_errors=True)
                 print(
                     f"ERROR: Caught exception {e}. Saving clips produced so far to {backup_folder}..."
                 )
                 shutil.copytree(tmpdir, backup_folder)
+                raise e
