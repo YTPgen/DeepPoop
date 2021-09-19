@@ -1,15 +1,17 @@
-from typing import List
-import random
 import copy
-import numpy as np
 import math
+import random
+from typing import List
 
+import numpy as np
 from moviepy.editor import VideoClip
+from numpy.lib.function_base import select
 
-from deep_poop.utils import combine_video_clips
-from deep_poop.scene import Scene
+from deep_poop.config import NEIGHBOR_SCORE_WEIGHT, SELECTION_SCORE_WEIGHT
 from deep_poop.effects.effect import Effect, EffectType
-from deep_poop.config import SELECTION_SCORE_WEIGHT, NEIGHBOR_SCORE_WEIGHT
+from deep_poop.effects.effect_graph import EffectGraph, EffectNode
+from deep_poop.scene import Scene
+from deep_poop.utils import combine_video_clips
 
 # TODO: Move to conf
 A = -1 / 70
@@ -20,14 +22,14 @@ class EffectApplier:
     def __init__(
         self,
         max_intensity: float,
-        effects: List[Effect],
+        effect_graph: EffectGraph,
         easy_start: float = 0,
         min_effect_length: float = 1.0,
-        max_simultaneous_effects=4,
+        max_simultaneous_effects=3,
     ):
         self.intensity = easy_start
         self.max_intensity = max_intensity
-        self.effects = effects
+        self.effect_graph = effect_graph
         self.min_effect_length = min_effect_length
         self._effects_to_apply = []
         self._next_effect_intensity_threshold = (
@@ -100,10 +102,12 @@ class EffectApplier:
             )
             if _time_until_next_effect > 0:
                 scene_before = edited_scene.subscene(
-                    start=0, end=current_point_in_scene,
+                    start=0,
+                    end=current_point_in_scene,
                 )
                 effect_scene = edited_scene.subscene(
-                    start=current_point_in_scene, end=scene.length(),
+                    start=current_point_in_scene,
+                    end=scene.length(),
                 )
                 self._process_scene_effects(effect_scene)
                 edited_scene.clip = combine_video_clips(
@@ -147,10 +151,14 @@ class EffectApplier:
     def _select_effects(self, scene: Scene):
         self._effects_to_apply = []
         while self._continue_add_effects():
-            usable_effects = self._usable_effects(scene.length())
-            if usable_effects == []:
+            previous_effect = self._previous_effect()
+            if previous_effect == None:
+                next_effect = self._select_initial_effect(scene)
+            else:
+                next_effect = self._select_next_effect(previous_effect, scene)
+
+            if next_effect == None:
                 return
-            next_effect = self._select_effect(effects=usable_effects, scene=scene)
             self._effects_to_apply.append(next_effect)
 
     def _apply_effect(self, scene: Scene, effect: Effect, duration: float) -> VideoClip:
@@ -207,35 +215,41 @@ class EffectApplier:
                 return False
         return True
 
-    def _usable_effects(self, scene_length: float):
-        if self._previous_effect() is None:
-            usable_effects = [
-                e for e in self.effects if self.can_apply(e, scene_length)
-            ]
-        else:
-            usable_effects = [
-                e
-                for e in self.effects
-                if e.name in self._previous_effect().compatible_effects()
-                and self.can_apply(e, scene_length)
-            ]
-        return usable_effects
+    def _select_initial_effect(self, scene: Scene) -> Effect:
+        usable_effects = [
+            e for e in self.effect_graph.effects if self.can_apply(e, scene.length())
+        ]
+        if len(usable_effects) == 0:
+            return None
+        effect_scores = np.array([e.selection_score(scene) for e in usable_effects])
+        return self._pick_random_weighted(usable_effects, effect_scores)
 
-    def _select_effect(self, effects: List[Effect], scene: Scene):
-        selection_scores = np.array([e.selection_score(scene) for e in effects])
-        if self._previous_effect() is not None:
-            neighbor_scores = np.array(
-                [self._previous_effect().neighbor_score(e) for e in effects]
-            )
-        else:
-            neighbor_scores = np.ones(len(selection_scores))
-        config_weights = np.ones(len(selection_scores))
+    def _select_next_effect(self, previous_effect: Effect, scene: Scene):
+        connections: EffectNode.EffectConnection = [
+            c
+            for c in self.effect_graph.get_effect_connections(previous_effect)
+            if self.can_apply(c.other.effect, scene.length())
+        ]
+        if len(connections) == 0:
+            return None
+        selection_scores = np.array(
+            [c.other.effect.selection_score(scene) for c in connections]
+        )
+        neighbor_scores = np.array([c.weight for c in connections])
         effect_scores = (
             SELECTION_SCORE_WEIGHT * selection_scores
             + NEIGHBOR_SCORE_WEIGHT * neighbor_scores
-        ) * config_weights
-        # Normalize
-        effect_scores /= sum(effect_scores)
-        sample = np.random.multinomial(1, effect_scores, size=1)
+        )
+        return self._pick_random_weighted(
+            [c.other.effect for c in connections], effect_scores
+        )
+
+    def _pick_random_weighted(self, elements: List, weights: np.array):
+        if len(elements) != len(weights):
+            return ValueError(
+                f"Elements amount {len(elements)} and weights amount {len(weights)} does not match"
+            )
+        weights /= sum(weights)
+        sample = np.random.multinomial(1, weights, size=1)
         chosen_effect_index = np.where(sample[0] == 1)[0].item()
-        return effects[chosen_effect_index]
+        return elements[chosen_effect_index]

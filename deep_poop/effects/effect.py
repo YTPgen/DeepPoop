@@ -29,7 +29,6 @@ class Effect:
         max_len: float = 3600,
         length_distribution: EffectLengthDistribution = None,
         can_cut: bool = False,
-        neighbors: dict = {},
         standalone=True,
         name=None,
     ):
@@ -39,27 +38,11 @@ class Effect:
         self.max_len = max_len
         self.can_cut = can_cut
         self.length_distribution = length_distribution
-        self.neighbors = neighbors
         self.standalone = standalone
-        if len(self.compatible_effects()) == 0 and not self.standalone:
-            raise Exception(
-                "Effect can not be non-standalone with no compatible effects"
-            )
         self.name = self.__class__.__name__ if name is None else name
 
-    def compatible_effects(self):
-        # TODO: Could be special case if no connections or global conf to connect all
-        return list(self.neighbors.keys())
-
-    def get_neighbors(self):
-        return self.neighbors
-
-    def set_neighbor(self, effect_type, weight: float):
-        self.neighbors[effect_type] = weight
-
     def initialize_effect(self, strength: float):
-        """Any initialization that needs to take place when effect is used.
-        """
+        """Any initialization that needs to take place when effect is used."""
         pass
 
     def effect_length(self, max_len: float):
@@ -95,19 +78,6 @@ class Effect:
             float: Selection score
         """
         return 0.5
-
-    def neighbor_score(self, effect) -> float:
-        """Returns the weight of the neighbor edge to a given effect. 
-
-        Args:
-            effect (Effect): Neighboring effect
-
-        Returns:
-            float: Weight of edge to effect
-        """
-        if effect.name not in self.neighbors:
-            return 0
-        return self.neighbors[effect.name]
 
     @abc.abstractmethod
     def effect_function(self, scene: Scene) -> VideoClip:
