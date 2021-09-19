@@ -17,16 +17,16 @@ class Scene:
     """
 
     def __init__(
-        self, video_clip: VideoClip, subscenes: "List[Scene]" = [],
+        self,
+        video_clip: VideoClip,
+        subscenes: "List[Scene]" = [],
     ):
         self.subscenes = subscenes
         self.clip = video_clip
         self.frames = []
 
     def analyze_frames(self) -> List[FullFrame]:
-        """Analyzes each frame of scene clip for metadata 
-
-        """
+        """Analyzes each frame of scene clip for metadata"""
         frames: List[FullFrame] = CutClip(self.clip).frames
         if not skip_faces():
             if using_gpu:
@@ -42,10 +42,10 @@ class Scene:
                 frame.face_locations = face_locations
         self.frames = frames
 
-    def has_faces(self):
+    def has_faces(self) -> bool:
         return self.faces_amount() > 0
 
-    def faces_amount(self):
+    def faces_amount(self) -> int:
         return max([len(f.faces) for f in self.frames])
 
     def length(self) -> float:
@@ -72,7 +72,7 @@ class Scene:
             end (float): End time of scene in seconds
 
         Returns:
-            Scene: Subscene of this scene 
+            Scene: Subscene of this scene
         """
         end = max(min(self.clip.duration, end), 1 / self.clip.fps)
         start = min(max(0, start), end - 1 / self.clip.fps)

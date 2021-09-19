@@ -1,3 +1,4 @@
+from deep_poop.build_effect_graph import EFFECT_GRAPH
 import random
 import tempfile
 import shutil
@@ -8,7 +9,6 @@ from moviepy.editor import VideoFileClip, concatenate_videoclips, VideoClip
 
 from deep_poop.scene_cutter import SceneCutter
 from deep_poop.effect_applier import EffectApplier
-from deep_poop.effect_list import EFFECTS
 from deep_poop.utils import combine_audio_clips, combine_video_clips
 from deep_poop.scene import Scene
 
@@ -55,7 +55,9 @@ class Generator:
         )
         self.length = length
         self._effect_applier = EffectApplier(
-            max_intensity=max_intensity, easy_start=easy_start, effects=EFFECTS
+            max_intensity=max_intensity,
+            easy_start=easy_start,
+            effect_graph=EFFECT_GRAPH,
         )
         self.reuse = reuse
         self.abruptness = abruptness

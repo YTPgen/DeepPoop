@@ -63,7 +63,7 @@ class SceneCutter:
             )
         self._scene_threshold = val
 
-    def get_scenes(self, video_clip: VideoClip, video_file: str):
+    def get_scenes(self, video_clip: VideoClip, video_file: str) -> List[Scene]:
         scenes = []
         scene_times = self.split_scenes(
             video_file=video_file,
@@ -104,7 +104,7 @@ class SceneCutter:
             end (int, optional): Frame until to split (Defaults to None)
 
         Returns:
-            List[Scene]: List of split Scenes
+            List[Tuple]: List of scene start-end tuples
         """
         scenes = []
         video_manager = scenedetect.VideoManager([video_file])

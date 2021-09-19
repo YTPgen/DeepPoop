@@ -3,6 +3,7 @@ import tempfile
 
 import librosa
 from moviepy.audio.io.AudioFileClip import AudioFileClip
+import soundfile as sf
 
 import deep_poop.effects.effect as effect
 from deep_poop.scene import Scene
@@ -35,6 +36,7 @@ class Pitch(effect.Effect):
             audio.write_audiofile(tmp_file, logger=None)
             y, sr = librosa.core.load(tmp_file, audio.fps)
             y_shifted = librosa.effects.pitch_shift(y, sr, n_steps=self.steps)
-            librosa.output.write_wav(pitched_file, y_shifted, sr)
+            # librosa.output.write_wav(pitched_file, y_shifted, sr)
+            sf.write(pitched_file, y_shifted, sr, 'PCM_24')
             video.audio = AudioFileClip(pitched_file)
             return video
