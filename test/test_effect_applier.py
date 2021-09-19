@@ -1,3 +1,4 @@
+from deep_poop.effects.effect_graph import EffectGraph
 from unittest.mock import MagicMock
 
 import pytest
@@ -20,8 +21,13 @@ def dummy_effect():
 
 @pytest.fixture(scope="function")
 def effect_applier(dummy_effect):
+    graph = EffectGraph()
+    graph.add_node(dummy_effect)
     return EffectApplier(
-        max_intensity=20, easy_start=0, effects=[dummy_effect], min_effect_length=0.1
+        max_intensity=20,
+        easy_start=0,
+        min_effect_length=0.1,
+        effect_graph=graph,
     )
 
 
@@ -29,10 +35,12 @@ def test_effect_applier_skip(effect_applier, scene):
     effect_applier.max_intensity = 20
     effect_applier.intensity = 30
     effect_applier.feed_scene(scene)
-    effect_applier.effects[0].apply.assert_not_called()
+    effect = effect_applier.effect_graph.effects[0]
+    effect.apply.assert_not_called()
 
 
 def test_effect_applier_applied(effect_applier, scene):
     effect_applier.intensity = 0
     effect_applier.feed_scene(scene)
-    effect_applier.effects[0].apply.assert_called()
+    effect = effect_applier.effect_graph.effects[0]
+    effect.apply.assert_called()
