@@ -38,7 +38,7 @@ class EffectGraph:
 
     @property
     def nodes(self) -> List[EffectNode]:
-        return self._nodes.values()
+        return list(self._nodes.values())
 
     @property
     def effects(self) -> List[Effect]:

@@ -193,6 +193,7 @@ connect(scramble, zoom, 1)
 connect(scramble, invert, 0.3)
 
 connect(pixelate, stretch_x, 1)
+connect(pixelate, pitch_down, 1)
 
 connect(rotate, zoom, 1)
 

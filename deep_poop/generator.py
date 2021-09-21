@@ -72,7 +72,7 @@ class Generator:
             print(f"Subscene has corrupted clip data. Skipping...")
             return 0
         print(f"DEBUG: Handling subscene with length {subscene.length()}")
-        # Ugly fix as scenecutter does not seem to respect minimum length
+        # Fix as scenecutter does not seem to respect minimum length
         if len(subscene.frames) < self._scene_cutter.subscene_min_len:
             print(
                 f"WARNING: Skipped subscene as length {len(subscene.frames)} is shorter than minimum"

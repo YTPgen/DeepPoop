@@ -44,3 +44,10 @@ effect_rate - controls how often affects are applied 0-100 (100 = always effect,
 ## Effect priority
 
 Some effects can maybe only be applied sometimes (sentence mixing, faces) so they should have a higher priority during selection. Can be implemented using the `selection_score`
+
+
+
+# NOTE
+
+Make selection score in effect initialization
+0 selection score (default) means non-standalone and cannot be picked first
