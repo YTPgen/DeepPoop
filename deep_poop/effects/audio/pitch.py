@@ -24,8 +24,9 @@ class Pitch(effect.Effect):
         self.min_steps = min_steps
         self.max_steps = max_steps
 
-    def initialize_effect(self, strength: float):
-        self.steps = self.min_steps + int((self.max_steps - self.min_steps) * strength)
+    def initialize_effect(self, scene: Scene, strength: float):
+        self.steps = self.min_steps + int((self.max_steps - self.min_steps))
+        self.strength = strength
 
     def effect_function(self, scene: Scene):
         video = scene.clip
@@ -37,6 +38,6 @@ class Pitch(effect.Effect):
             y, sr = librosa.core.load(tmp_file, audio.fps)
             y_shifted = librosa.effects.pitch_shift(y, sr, n_steps=self.steps)
             # librosa.output.write_wav(pitched_file, y_shifted, sr)
-            sf.write(pitched_file, y_shifted, sr, 'PCM_24')
+            sf.write(pitched_file, y_shifted, sr, "PCM_24")
             video.audio = AudioFileClip(pitched_file)
             return video

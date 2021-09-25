@@ -1,5 +1,5 @@
 import numpy as np
-import functools
+from deep_poop.scene import Scene
 from moviepy.audio.AudioClip import AudioArrayClip, AudioClip
 
 
@@ -9,4 +9,3 @@ def audio_to_frames(audio: AudioClip):
 
 def frames_to_audio(frames: np.ndarray, fps: float):
     return AudioArrayClip(frames, fps)
-

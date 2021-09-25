@@ -31,7 +31,7 @@ class Scramble(effect.Effect):
         self.min_scramble_frame_length = min_scramble_frame_length
         self.max_scramble_frame_length = max_scramble_frame_length
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
         self.scramble_frame_length = int(
             (self.max_scramble_frame_length - self.min_scramble_frame_length) * strength
             + self.min_scramble_frame_length

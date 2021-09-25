@@ -1,3 +1,4 @@
+from deep_poop.effects.interpolator import InterpolationType, StrengthInterpolator
 from deep_poop.effects.effect_graph import EffectGraph
 import deep_poop.effects as effects
 from deep_poop.effects.effect import EffectLengthDistribution
@@ -24,7 +25,7 @@ scramble = add(
         max_scramble_frame_length=3,
         unique_scramble=False,
         intensity=3,
-        min_len=1.5,
+        min_len=0.5,
         max_len=2.0,
         length_distribution=EffectLengthDistribution.RANDOM,
         can_cut=False,
@@ -35,6 +36,7 @@ pixelate = add(
         min_strength=4,
         max_strength=12,
         intensity=4.7,
+        min_len=0.3,
         max_len=1.2,
         length_distribution=EffectLengthDistribution.RANDOM,
         standalone=False,
@@ -46,6 +48,7 @@ rotate = add(
         max_speed=2.5,
         center_on_face=False,
         intensity=1.4,
+        min_len=0.3,
         max_len=1.2,
         length_distribution=EffectLengthDistribution.RANDOM,
     )
@@ -63,6 +66,7 @@ zoom = add(
         min_len=0.3,
         max_len=3.0,
         length_distribution=EffectLengthDistribution.RANDOM,
+        interpolator=StrengthInterpolator(interpolation_type=InterpolationType.NONE),
     )
 )
 zoom_out = add(
@@ -73,6 +77,7 @@ zoom_out = add(
         min_len=0.3,
         max_len=2.0,
         name="ZoomOut",
+        interpolator=StrengthInterpolator(interpolation_type=InterpolationType.NONE),
     )
 )
 quick_zoom = add(
@@ -83,6 +88,13 @@ quick_zoom = add(
         min_len=0.3,
         max_len=1.5,
         length_distribution=EffectLengthDistribution.RANDOM,
+        interpolator=StrengthInterpolator(
+            max_points_amount=10,
+            max_points_per_second=2,
+            max_y=2,
+            min_y=0.5,
+            interpolation_type=InterpolationType.CUBIC,
+        ),
         name="QuickZoom",
     )
 )
@@ -94,20 +106,46 @@ stretch_x = add(
         min_len=0.3,
         max_len=1.5,
         length_distribution=EffectLengthDistribution.RANDOM,
+        interpolator=StrengthInterpolator(interpolation_type=InterpolationType.NONE),
         zoom_y=False,
         name="StretchX",
     )
 )
-stretch_y = add(
+
+rubber_stretch_x = add(
     effects.Zoom(
         min_factor=2.5,
-        max_factor=6,
+        max_factor=10,
         intensity=1.3,
         min_len=0.3,
         max_len=1.5,
         length_distribution=EffectLengthDistribution.RANDOM,
+        interpolator=StrengthInterpolator(
+            max_points_amount=20,
+            max_points_per_second=3,
+            interpolation_type=InterpolationType.CUBIC,
+        ),
+        zoom_y=False,
+        name="RubberStretchX",
+    )
+)
+
+
+rubber_stretch_y = add(
+    effects.Zoom(
+        min_factor=2.5,
+        max_factor=10,
+        intensity=1.3,
+        min_len=0.3,
+        max_len=1.5,
+        length_distribution=EffectLengthDistribution.RANDOM,
+        interpolator=StrengthInterpolator(
+            max_points_amount=20,
+            max_points_per_second=3,
+            interpolation_type=InterpolationType.CUBIC,
+        ),
         zoom_x=False,
-        name="StretchY",
+        name="RubberStretchY",
     )
 )
 
@@ -129,8 +167,8 @@ echo = add(
 pitch_up = add(
     effects.Pitch(
         min_steps=7,
-        max_steps=30,
-        min_len=1.2,
+        max_steps=18,
+        min_len=0.5,
         max_len=2.5,
         intensity=1.4,
         name="PitchUp",
@@ -138,9 +176,9 @@ pitch_up = add(
 )
 pitch_down = add(
     effects.Pitch(
-        min_steps=-7,
-        max_steps=-20,
-        min_len=1.7,
+        min_steps=-4,
+        max_steps=-15,
+        min_len=0.7,
         max_len=3.2,
         intensity=1.0,
         name="PitchDown",
@@ -201,21 +239,26 @@ connect(zoom, invert, 1)
 
 connect(zoom_out, shake, 1)
 
-connect(quick_zoom, rotate, 1)
-connect(quick_zoom, invert, 2)
+connect(quick_zoom, rotate, 2)
+connect(quick_zoom, invert, 1)
+connect(quick_zoom, scramble, 2)
 
-connect(stretch_x, echo, 1)
-connect(stretch_y, shake, 1)
 
 connect(pitch_up, pixelate, 1)
-connect(oscillating_robotify, invert, 1.5)
-connect(oscillating_robotify, scramble, 1)
-connect(oscillating_robotify, stretch_y, 1.5)
+connect(pitch_down, invert, 0.5)
+connect(oscillating_robotify, scramble, 0.5)
 
-connect(robotify, invert, 1)
-connect(robotify, pixelate, 2)
-connect(robotify, stretch_y, 1.35)
+connect(robotify, invert, 0.7)
+connect(robotify, pixelate, 1)
 
 connect(invert, echo, 1)
+
+connect(rubber_stretch_y, shake, 1)
+connect(rubber_stretch_y, pitch_down, 1.5)
+connect(rubber_stretch_y, rotate, 1)
+
+connect(rubber_stretch_x, pitch_down, 1)
+connect(rubber_stretch_x, rotate, 1)
+
 
 EFFECT_GRAPH = graph

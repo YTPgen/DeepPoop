@@ -22,8 +22,7 @@ class Robotify(effect.Effect):
         self.min_freq = min_freq
         self.max_freq = max_freq
 
-    def initialize_effect(self, strength: float):
-        self.angle = 0
+    def initialize_effect(self, scene: Scene, strength: float):
         self.frequency = (self.max_freq - self.min_freq) * strength + self.min_freq
 
     def effect_function(self, scene: Scene):
@@ -63,7 +62,7 @@ class OscillatingRobotify(effect.Effect):
         self.min_oscillation = min_oscillation
         self.max_oscillation = max_oscillation
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
         self.oscillation = (
             self.max_oscillation - self.min_oscillation
         ) * strength + self.min_oscillation

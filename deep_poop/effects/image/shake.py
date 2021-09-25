@@ -26,12 +26,12 @@ class Shake(effect.ImageEffect):
         self.min_strength = min_strength
         self.max_strength = max_strength
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
         self.shake_strength = (
             self.min_strength - self.max_strength
         ) * strength + self.min_strength
 
-    def apply_frame(self, frame: FullFrame, scene: Scene) -> np.ndarray:
+    def apply_frame(self, frame: FullFrame, scene: Scene, index: int) -> np.ndarray:
         by_x = random.uniform(-self.shake_strength, self.shake_strength)
         by_y = random.uniform(-self.shake_strength, self.shake_strength)
         T = np.float32([[1, 0, by_x], [0, 1, by_y]])

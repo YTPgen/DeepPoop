@@ -1,3 +1,4 @@
+from deep_poop.effects.interpolator import InterpolationType, StrengthInterpolator
 import pytest
 import os
 
@@ -63,4 +64,10 @@ def scramble():
 
 @pytest.fixture(scope="function")
 def zoom():
-    return Zoom(min_factor=1.5, max_factor=2, center_on_face=False, intensity=1)
+    return Zoom(
+        min_factor=1.5,
+        max_factor=2,
+        center_on_face=False,
+        intensity=1,
+        interpolator=StrengthInterpolator(interpolation_type=InterpolationType.NONE),
+    )

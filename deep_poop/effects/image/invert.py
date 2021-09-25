@@ -9,13 +9,11 @@ from deep_poop.scene import Scene
 
 
 class Invert(effect.ImageEffect):
-    """Inverts images in a video.
-
-    """
+    """Inverts images in a video."""
 
     def __init__(self, *args, **kwargs):
         kwargs["effect_type"] = effect.EffectType.IMAGE
         super(Invert, self).__init__(*args, **kwargs)
 
-    def apply_frame(self, frame: np.ndarray, scene: Scene):
+    def apply_frame(self, frame: np.ndarray, scene: Scene, index: int):
         return cv2.bitwise_not(frame)

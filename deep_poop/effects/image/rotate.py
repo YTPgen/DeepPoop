@@ -1,14 +1,13 @@
-import numpy as np
 import random
 
-from moviepy.editor import VideoClip
 import cv2
-from face_feature_recognizer.face import Face
-
 import deep_poop.effects.effect as effect
 import deep_poop.effects.utils as utils
+import numpy as np
 from deep_poop.clips.cut_clip import FullFrame
 from deep_poop.scene import Scene
+from face_feature_recognizer.face import Face
+from moviepy.editor import VideoClip
 
 
 class Rotate(effect.ImageEffect):
@@ -36,11 +35,11 @@ class Rotate(effect.ImageEffect):
         # TODO: Consider adding scale up/down
         self.scale = 1
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
         self.angle = 0
         self.speed = (self.max_speed - self.min_speed) * strength + self.min_speed
 
-    def apply_frame(self, frame: FullFrame, scene: Scene) -> np.ndarray:
+    def apply_frame(self, frame: FullFrame, scene: Scene, index: int) -> np.ndarray:
         (height, width) = frame.shape[:2]
         if self.center_on_face and len(frame.faces) > 0:
             # TODO: Consider smarter approach for following same face

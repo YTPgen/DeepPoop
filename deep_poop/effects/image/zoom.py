@@ -4,13 +4,13 @@ from moviepy.editor import VideoClip
 import cv2
 
 import deep_poop.effects.effect as effect
-import deep_poop.effects.utils as utils
+from deep_poop.effects.interpolator import StrengthInterpolator
 from deep_poop.scene import Scene
 
 
 class Zoom(effect.ImageEffect):
     """Zooms in on a location in an image.
-    
+
     Args:
         min_factor (float): Minimum zoom factor
         max_factor (float): Maximum zoom factor
@@ -23,6 +23,7 @@ class Zoom(effect.ImageEffect):
         self,
         min_factor: int,
         max_factor: int,
+        interpolator: StrengthInterpolator,
         center_on_face: bool = False,
         zoom_x: bool = True,
         zoom_y: bool = True,
@@ -36,8 +37,11 @@ class Zoom(effect.ImageEffect):
         self.center_on_face = center_on_face
         self.zoom_x = zoom_x
         self.zoom_y = zoom_y
+        self.interpolator = interpolator
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
+        self.interpolation_multipliers = self.interpolator.interpolate_all_frames(scene)
+
         self.current_factor_x, self.current_factor_y = 1, 1
         self.factor_x = (
             (self.max_factor - self.min_factor) * strength + self.min_factor
@@ -50,16 +54,18 @@ class Zoom(effect.ImageEffect):
             else 1
         )
 
-    def apply_frame(self, frame: np.ndarray, scene: Scene):
+    def apply_frame(self, frame: np.ndarray, scene: Scene, index: int):
         increment_per_frame = 1 / (scene.length() * scene.clip.fps)
         self.current_factor_x += increment_per_frame * (self.factor_x - 1)
         self.current_factor_y += increment_per_frame * (self.factor_y - 1)
         (height, width) = frame.shape[:2]
+
+        interpolation_multiplier = self.interpolation_multipliers[index]
         scaled = cv2.resize(
             frame,
             None,
-            fx=self.current_factor_x,
-            fy=self.current_factor_y,
+            fx=self.current_factor_x * interpolation_multiplier,
+            fy=self.current_factor_y * interpolation_multiplier,
             interpolation=cv2.INTER_LINEAR,
         )
         # TODO: Fix to use face pos if enabled

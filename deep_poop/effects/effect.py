@@ -9,6 +9,12 @@ from moviepy.editor import VideoClip, ImageSequenceClip
 from deep_poop.scene import Scene
 
 
+class EffectStrengthCurve(Enum):
+    FLAT = 0
+    IMAGE = 1
+    VIDEO = 2
+
+
 class EffectType(Enum):
     AUDIO = 0
     IMAGE = 1
@@ -41,7 +47,7 @@ class Effect:
         self.standalone = standalone
         self.name = self.__class__.__name__ if name is None else name
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
         """Any initialization that needs to take place when effect is used."""
         pass
 
@@ -63,7 +69,7 @@ class Effect:
         return length
 
     def apply(self, scene: Scene, strength=1):
-        self.initialize_effect(strength)
+        self.initialize_effect(scene, strength)
         changed_clip = self.effect_function(scene)
         return changed_clip
 
@@ -106,17 +112,15 @@ class ImageEffect(Effect):
             VideoClip: Transformed scene video clip
         """
         output_frames = []
-        for frame in scene.frames:
-            # TODO: Fix color or move to FullFrame
-            # frame.video_frame = cv2.cvtColor(frame.video_frame, cv2.COLOR_RGB2BGR)
-            f = self.apply_frame(frame.video_frame, scene)
+        for i, frame in enumerate(scene.frames):
+            f = self.apply_frame(frame.video_frame, scene, i)
             output_frames.append(f)
-        output_video = ImageSequenceClip(output_frames, scene.clip.fps)
+        output_video = ImageSequenceClip(output_frames, scene.clip.fps, i)
         output_video.audio = scene.clip.audio.copy()
         return output_video
 
     @abc.abstractmethod
-    def apply_frame(self, frame: np.ndarray, scene: Scene) -> np.ndarray:
+    def apply_frame(self, frame: np.ndarray, scene: Scene, index: int) -> np.ndarray:
         """Applies effect function on a single image frame.
 
         Args:

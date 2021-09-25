@@ -22,13 +22,13 @@ class Pixelate(effect.ImageEffect):
         self.min_strength = min_strength
         self.max_strength = max_strength
 
-    def initialize_effect(self, strength: float):
+    def initialize_effect(self, scene: Scene, strength: float):
         self.angle = 0
         self.strength = (
             self.max_strength - self.min_strength
         ) * strength + self.min_strength
 
-    def apply_frame(self, frame: np.ndarray, scene: Scene):
+    def apply_frame(self, frame: np.ndarray, scene: Scene, index: int):
         squish_strength = 1 + self.strength
         (height, width) = frame.shape[:2]
         frame = cv2.resize(
@@ -37,5 +37,7 @@ class Pixelate(effect.ImageEffect):
             interpolation=cv2.INTER_NEAREST,
         )
         return cv2.resize(
-            frame, (int(width), int(height)), interpolation=cv2.INTER_LINEAR,
+            frame,
+            (int(width), int(height)),
+            interpolation=cv2.INTER_LINEAR,
         )
