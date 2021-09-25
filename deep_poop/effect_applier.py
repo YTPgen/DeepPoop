@@ -164,7 +164,7 @@ class EffectApplier:
     def _apply_effect(self, scene: Scene, effect: Effect, duration: float) -> VideoClip:
         scene_length = scene.length()
         if duration >= scene_length:
-            transformed_clip = scene.clip = effect.apply(
+            transformed_clip = effect.apply(
                 scene=scene, strength=self._choose_effect_strength()
             )
         else:
