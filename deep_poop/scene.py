@@ -6,6 +6,10 @@ from face_feature_recognizer.face_feature_recognizer import FaceFeatureRecognize
 
 from deep_poop.clips.cut_clip import FullFrame, CutClip
 from deep_poop.config import using_gpu, skip_faces
+from deep_poop.analytics.face_detect import (
+    face_locations,
+    batch_face_locations,
+)
 
 
 class Scene:
@@ -29,17 +33,15 @@ class Scene:
         """Analyzes each frame of scene clip for metadata"""
         frames: List[FullFrame] = CutClip(self.clip).frames
         if not skip_faces():
-            if using_gpu:
+            if using_gpu():
                 image_frames = [f.video_frame for f in frames]
-                frames_face_locations = FaceFeatureRecognizer.batch_face_locations(
-                    image_frames, batch_size=128
+                frames_face_locations = batch_face_locations(
+                    image_frames, batch_size=16
                 )
             else:
-                frames_face_locations = [
-                    FaceFeatureRecognizer.face_locations(f.video_frame) for f in frames
-                ]
-            for frame, face_locations in zip(frames, frames_face_locations):
-                frame.face_locations = face_locations
+                frames_face_locations = [face_locations(f.video_frame) for f in frames]
+            for frame, faces in zip(frames, frames_face_locations):
+                frame.face_locations = faces
         self.frames = frames
 
     def has_faces(self) -> bool:

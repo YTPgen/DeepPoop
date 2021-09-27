@@ -7,11 +7,11 @@ NEIGHBOR_SCORE_WEIGHT = 1.0
 
 
 def using_gpu():
-    return False
+    return True
 
 
 def skip_faces():
-    return True
+    return False
 
 
 # def effect_config_weights():

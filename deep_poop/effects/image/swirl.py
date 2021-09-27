@@ -1,3 +1,4 @@
+from deep_poop.analytics.face_detect import face_to_center
 from deep_poop.effects.interpolator import StrengthInterpolator
 from deep_poop.value_generator import ZERO, ConstantValueGenerator, ValueGenerator
 import random
@@ -5,6 +6,7 @@ import numpy as np
 import cv2
 from skimage.transform import swirl
 from face_feature_recognizer.face import Face
+from face_feature_recognizer.face_feature_recognizer import FaceFeatureRecognizer
 
 import deep_poop.effects.effect as effect
 from deep_poop.clips.cut_clip import FullFrame
@@ -50,6 +52,8 @@ class Swirl(effect.ImageEffect):
     def apply_frame(self, frame: np.ndarray, scene: Scene, index: int) -> np.ndarray:
         strength = self._strengths[index]
         current_time = index / scene.frame_length() * scene.length()
+        current_scene_frame: FullFrame = scene.frames[index]
+
         if self._transition_time > 0:
             swirl_transition = min(1, current_time / self._transition_time)
         else:
@@ -62,7 +66,11 @@ class Swirl(effect.ImageEffect):
 
         (height, width) = frame.shape[:2]
         if self.center_on_face:
-            raise NotImplemented
+            if len(current_scene_frame.face_locations) > 0:
+                face = current_scene_frame.face_locations[0]
+                center = face_to_center(face)
+            else:
+                return frame
         else:
             center = (width / 2, height / 2)
 
