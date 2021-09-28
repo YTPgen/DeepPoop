@@ -27,7 +27,7 @@ class ValueGenerator:
         Returns:
             int: Generated int value
         """
-        return self.round_fn(self.generate)
+        return self.round_fn(self.generate())
 
 
 class ConstantValueGenerator(ValueGenerator):

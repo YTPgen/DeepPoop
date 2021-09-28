@@ -37,7 +37,7 @@ class Scramble(effect.Effect):
             + self.min_scramble_frame_length
         )
 
-    def effect_function(self, scene: Scene):
+    def effect_function(self, scene: Scene, workers: int):
         cut_clip = CutClip(scene.clip)
 
         scrambled_frames = []

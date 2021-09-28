@@ -20,7 +20,7 @@ class Echo(effect.Effect):
         self.delay = delay
         self.strength = strength
 
-    def effect_function(self, scene: Scene):
+    def effect_function(self, scene: Scene, workers: int):
         video = scene.clip
         audio = video.audio
         audio_frames = utils.audio_to_frames(audio)

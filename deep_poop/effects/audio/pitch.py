@@ -28,7 +28,7 @@ class Pitch(effect.Effect):
         self.steps = self.min_steps + int((self.max_steps - self.min_steps))
         self.strength = strength
 
-    def effect_function(self, scene: Scene):
+    def effect_function(self, scene: Scene, workers: int):
         video = scene.clip
         audio = video.audio
         with tempfile.TemporaryDirectory() as tmpdir:

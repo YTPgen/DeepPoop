@@ -12,3 +12,4 @@ from deep_poop.effects.image.rotate import Rotate
 from deep_poop.effects.image.zoom import Zoom
 from deep_poop.effects.image.shake import Shake
 from deep_poop.effects.image.swirl import Swirl
+from deep_poop.effects.image.bulge import Bulge

@@ -1,3 +1,7 @@
+import math
+import operator
+import functools
+import multiprocessing
 import numpy as np
 from enum import Enum
 import random
@@ -68,9 +72,9 @@ class Effect:
             raise ValueError
         return length
 
-    def apply(self, scene: Scene, strength=1):
+    def apply(self, scene: Scene, workers: int = 1, strength: int = 1):
         self.initialize_effect(scene, strength)
-        changed_clip = self.effect_function(scene)
+        changed_clip = self.effect_function(scene, workers)
         return changed_clip
 
     def selection_score(self, scene: Scene) -> float:
@@ -102,7 +106,7 @@ class ImageEffect(Effect):
     def __init__(self, *args, **kwargs):
         super(ImageEffect, self).__init__(*args, **kwargs)
 
-    def effect_function(self, scene: Scene) -> VideoClip:
+    def effect_function(self, scene: Scene, workers: int) -> VideoClip:
         """Applies image effect to each frame of scene video clip.
 
         Args:
@@ -112,12 +116,50 @@ class ImageEffect(Effect):
             VideoClip: Transformed scene video clip
         """
         output_frames = []
-        for i, frame in enumerate(scene.frames):
-            f = self.apply_frame(frame.video_frame, scene, i)
-            output_frames.append(f)
-        output_video = ImageSequenceClip(output_frames, scene.clip.fps, i)
+        if workers > 1:
+            output_frames = self._parallel_apply(scene)
+        else:
+            for i, frame in enumerate(scene.frames):
+                f = self.apply_frame(frame.video_frame, scene, i)
+                output_frames.append(f)
+        output_video = ImageSequenceClip(output_frames, scene.clip.fps)
         output_video.audio = scene.clip.audio.copy()
         return output_video
+
+    def _parallel_apply(self, scene: Scene, workers: int):
+        manager = multiprocessing.Manager()
+        result_list = manager.list()
+        for i in range(self.workers):
+            result_list.append([])
+        jobs = []
+
+        def _apply_frame_parallel(worker_index, frames, frames_start_index):
+            processed_frames = []
+            i = frames_start_index
+            for frame in frames:
+                f = self.apply_frame(frame.video_frame, scene, i)
+                processed_frames.append(f)
+                i += 1
+            result_list[worker_index] = processed_frames
+
+        frames_per_worker = math.ceil(scene.frame_length() / workers)
+        for i in range(self.workers):
+            worker_start = i * frames_per_worker
+            frames = scene.frames[worker_start : worker_start + frames_per_worker]
+            p = multiprocessing.Process(
+                target=_apply_frame_parallel,
+                args=(
+                    i,
+                    frames,
+                    worker_start,
+                ),
+            )
+            jobs.append(p)
+            p.start()
+
+        for proc in jobs:
+            proc.join()
+        return functools.reduce(operator.iconcat, result_list, [])
 
     @abc.abstractmethod
     def apply_frame(self, frame: np.ndarray, scene: Scene, index: int) -> np.ndarray:

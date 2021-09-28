@@ -25,7 +25,7 @@ class Robotify(effect.Effect):
     def initialize_effect(self, scene: Scene, strength: float):
         self.frequency = (self.max_freq - self.min_freq) * strength + self.min_freq
 
-    def effect_function(self, scene: Scene):
+    def effect_function(self, scene: Scene, workers: int):
         video = scene.clip
         audio = video.audio
         audio_frames = utils.audio_to_frames(audio)
@@ -67,7 +67,7 @@ class OscillatingRobotify(effect.Effect):
             self.max_oscillation - self.min_oscillation
         ) * strength + self.min_oscillation
 
-    def effect_function(self, scene: Scene):
+    def effect_function(self, scene: Scene, workers: int):
         video = scene.clip
         audio = video.audio
         audio_frames = utils.audio_to_frames(audio)
