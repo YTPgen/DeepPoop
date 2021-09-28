@@ -1,16 +1,12 @@
-from deep_poop.analytics.face_detect import face_to_center
-from deep_poop.effects.interpolator import StrengthInterpolator
-from deep_poop.value_generator import ZERO, ConstantValueGenerator, ValueGenerator
-import random
-import numpy as np
-import cv2
 from skimage.transform import swirl
-from face_feature_recognizer.face import Face
-from face_feature_recognizer.face_feature_recognizer import FaceFeatureRecognizer
+import numpy as np
 
 import deep_poop.effects.effect as effect
+from deep_poop.analytics.face_detect import face_to_center
 from deep_poop.clips.cut_clip import FullFrame
+from deep_poop.effects.interpolator import StrengthInterpolator
 from deep_poop.scene import Scene
+from deep_poop.value_generator import ZERO, ConstantValueGenerator, ValueGenerator
 
 
 class Swirl(effect.ImageEffect):
@@ -72,7 +68,7 @@ class Swirl(effect.ImageEffect):
             else:
                 return frame
         else:
-            center = (width / 2, height / 2)
+            center = (width // 2, height // 2)
 
         radius = self._radius * (height if height > width else width)
 
