@@ -1,3 +1,4 @@
+from deep_poop.value_generator import ConstantValueGenerator, RandomValueGenerator
 from deep_poop.effects.interpolator import InterpolationType, StrengthInterpolator
 from deep_poop.effects.effect_graph import EffectGraph
 import deep_poop.effects as effects
@@ -149,14 +150,71 @@ rubber_stretch_y = add(
     )
 )
 
+face_swirl = add(
+    effects.Swirl(
+        intensity=1,
+        min_len=0.5,
+        max_len=3,
+        min_swirl=2,
+        max_swirl=13,
+        radius_generator=RandomValueGenerator(0.1, 0.3),
+        center_on_face=True,
+        transition_time_generator=RandomValueGenerator(0, 2),
+        name="FaceSwirl",
+    )
+)
+
+inflate = add(
+    effects.Bulge(
+        intensity=0.7,
+        min_len=0.5,
+        max_len=3,
+        min_bulge=1.5,
+        max_bulge=4,
+        center_on_face=True,
+        radius_generator=RandomValueGenerator(0.1, 0.4),
+        transition_time_generator=RandomValueGenerator(0, 1),
+        name="Inflate",
+    )
+)
+
+black_hole = add(
+    effects.Bulge(
+        intensity=1.2,
+        min_len=0.5,
+        max_len=3,
+        min_bulge=5,
+        max_bulge=10,
+        center_on_face=True,
+        interpolator=StrengthInterpolator(min_points_amount=2, max_points_amount=5),
+        radius_generator=RandomValueGenerator(0.1, 0.4),
+        transition_time_generator=RandomValueGenerator(0, 2.5),
+        name="BlackHole",
+    )
+)
+
+
+# deflate = add(
+#     effects.Bulge(
+#         intensity=1.2,
+#         min_bulge=1.5,
+#         max_bulge=3,
+#         invert=True,
+#         center_on_face=True,
+#         radius_generator=RandomValueGenerator(0.1, 0.2),
+#         transition_time_generator=RandomValueGenerator(0, 1.2),
+#         name="Deflate",
+#     )
+# )
+
+
 ###############
 # SOUND
 ###############
 
 echo = add(
     effects.Echo(
-        delay=0.1,
-        strength=0.7,
+        delay=0.05,
         intensity=1.4,
         min_len=2,
         max_len=3.7,
@@ -184,7 +242,7 @@ pitch_down = add(
         name="PitchDown",
     )
 )
-oscillating_robotify = add(
+space_robot = add(
     effects.OscillatingRobotify(
         min_freq=2,
         max_freq=300,
@@ -193,6 +251,7 @@ oscillating_robotify = add(
         min_len=2,
         max_len=4,
         intensity=1.5,
+        name="SpaceRobotify",
     )
 )
 robotify = add(
@@ -235,23 +294,20 @@ connect(pixelate, pitch_down, 1)
 
 connect(rotate, zoom, 1)
 
-connect(zoom, invert, 1)
-
 connect(zoom_out, shake, 1)
 
 connect(quick_zoom, rotate, 2)
 connect(quick_zoom, invert, 1)
 connect(quick_zoom, scramble, 2)
 
-
 connect(pitch_up, pixelate, 1)
 connect(pitch_down, invert, 0.5)
-connect(oscillating_robotify, scramble, 0.5)
+connect(space_robot, scramble, 0.5)
 
 connect(robotify, invert, 0.7)
 connect(robotify, pixelate, 1)
 
-connect(invert, echo, 1)
+connect(invert, echo, 0.4)
 
 connect(rubber_stretch_y, shake, 1)
 connect(rubber_stretch_y, pitch_down, 1.5)
@@ -260,5 +316,17 @@ connect(rubber_stretch_y, rotate, 1)
 connect(rubber_stretch_x, pitch_down, 1)
 connect(rubber_stretch_x, rotate, 1)
 
+connect(inflate, pitch_up, 1)
+connect(inflate, pitch_down, 1)
+connect(inflate, zoom_out, 1)
+# connect(deflate, pitch_down, 1)
+
+connect(black_hole, space_robot, 1)
+connect(black_hole, shake, 1.2)
+connect(black_hole, scramble, 1.2)
+
+connect(face_swirl, zoom, 1)
+connect(face_swirl, pitch_down, 1)
+connect(face_swirl, shake, 1)
 
 EFFECT_GRAPH = graph

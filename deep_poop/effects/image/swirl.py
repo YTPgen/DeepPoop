@@ -38,6 +38,11 @@ class Swirl(effect.ImageEffect):
         self.transition_time_generator = transition_time_generator
         self.interpolator = interpolator
 
+    def selection_score(self, scene: Scene) -> float:
+        if self.center_on_face:
+            return 1 if scene.faces_amount() > 0 else 0
+        return 0.5
+
     def initialize_effect(self, scene: Scene, strength: float):
         interpolation_multipliers = self.interpolator.interpolate_all_frames(scene)
         self._strengths = [m * strength for m in interpolation_multipliers]

@@ -1,7 +1,10 @@
+from genericpath import exists
 from typing import List
+import os
 
 import scenedetect
 from moviepy.editor import VideoClip
+from scenedetect import stats_manager
 
 from deep_poop.scene import Scene
 
@@ -23,6 +26,7 @@ class SceneCutter:
         subscene_threshold: float,
         scene_min_len: int,
         subscene_min_len: int,
+        work_dir: str,
         downscale: float = None,
     ):
         self.scene_threshold = scene_threshold
@@ -30,6 +34,9 @@ class SceneCutter:
         self.scene_min_len = scene_min_len
         self.subscene_min_len = subscene_min_len
         self.downscale = downscale
+        self.work_dir = work_dir
+        if not os.path.exists(work_dir):
+            os.makedirs(work_dir)
 
     @property
     def subscene_threshold(self):
@@ -65,13 +72,17 @@ class SceneCutter:
 
     def get_scenes(self, video_clip: VideoClip, video_file: str) -> List[Scene]:
         scenes = []
+        print("INFO: Splitting video into scenes")
         scene_times = self.split_scenes(
             video_file=video_file,
             threshold=self.scene_threshold,
             min_len=self.scene_min_len,
         )
+        root_scene = Scene(video_clip=video_clip, start_frame_index=0)
+        root_scene.enable_cache(os.path.join(self.work_dir, "cache.pickle"))
         for start, end in scene_times:
-            next_scene = Scene(video_clip=video_clip.subclip(start, end))
+            next_scene = root_scene.subscene(start, end)
+            # next_scene = Scene(video_clip=video_clip.subclip(start, end))
             # subscene_times = self.split_scenes(
             #     video_file=video_file,
             #     threshold=self.subscene_threshold,
@@ -109,7 +120,9 @@ class SceneCutter:
         scenes = []
         video_manager = scenedetect.VideoManager([video_file])
         try:
-            scene_manager = scenedetect.SceneManager()
+            stats_file = os.path.join(self.work_dir, "scene_stats.csv")
+            stats_manager = self.get_stats_managers(stats_file)
+            scene_manager = scenedetect.SceneManager(stats_manager)
             scene_manager.add_detector(scenedetect.ContentDetector(threshold, min_len))
             video_manager.set_downscale_factor(self.downscale)
             base_timecode = video_manager.get_base_timecode()
@@ -121,6 +134,15 @@ class SceneCutter:
             scene_manager.detect_scenes(frame_source=video_manager)
             scenes = scene_manager.get_scene_list(base_timecode)
             scenes = [(s[0].get_seconds(), s[1].get_seconds()) for s in scenes]
+            with open(stats_file, "w") as f:
+                stats_manager.save_to_csv(f, base_timecode)
         finally:
             video_manager.release()
         return scenes
+
+    def get_stats_managers(self, stats_file: str) -> scenedetect.StatsManager:
+        stats_manager = scenedetect.StatsManager()
+        if os.path.exists(stats_file):
+            with open(stats_file, "r") as f:
+                stats_manager.load_from_csv(f)
+        return stats_manager

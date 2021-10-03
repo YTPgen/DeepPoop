@@ -36,7 +36,6 @@ class Rotate(effect.ImageEffect):
         self.scale = 1
 
     def initialize_effect(self, scene: Scene, strength: float):
-        self.angle = 0
         self.speed = (self.max_speed - self.min_speed) * strength + self.min_speed
 
     def apply_frame(self, frame: FullFrame, scene: Scene, index: int) -> np.ndarray:
@@ -48,6 +47,6 @@ class Rotate(effect.ImageEffect):
         else:
             center = (width / 2, height / 2)
         angles_per_frame = 360 * self.speed / scene.clip.fps
-        self.angle += angles_per_frame
-        rotation_matrix = cv2.getRotationMatrix2D(center, self.angle, self.scale)
+        angle = angles_per_frame * index
+        rotation_matrix = cv2.getRotationMatrix2D(center, angle, self.scale)
         return cv2.warpAffine(frame, rotation_matrix, (width, height))

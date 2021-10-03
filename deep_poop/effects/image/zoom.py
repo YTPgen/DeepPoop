@@ -1,3 +1,5 @@
+from deep_poop.analytics.face_detect import face_to_center
+from deep_poop.clips.cut_clip import FullFrame
 import numpy as np
 
 from moviepy.editor import VideoClip
@@ -23,12 +25,12 @@ class Zoom(effect.ImageEffect):
         self,
         min_factor: int,
         max_factor: int,
-        interpolator: StrengthInterpolator,
+        interpolator: StrengthInterpolator = StrengthInterpolator(),
         center_on_face: bool = False,
         zoom_x: bool = True,
         zoom_y: bool = True,
         *args,
-        **kwargs
+        **kwargs,
     ):
         kwargs["effect_type"] = effect.EffectType.IMAGE
         super(Zoom, self).__init__(*args, **kwargs)
@@ -42,7 +44,6 @@ class Zoom(effect.ImageEffect):
     def initialize_effect(self, scene: Scene, strength: float):
         self.interpolation_multipliers = self.interpolator.interpolate_all_frames(scene)
 
-        self.current_factor_x, self.current_factor_y = 1, 1
         self.factor_x = (
             (self.max_factor - self.min_factor) * strength + self.min_factor
             if self.zoom_x
@@ -53,37 +54,34 @@ class Zoom(effect.ImageEffect):
             if self.zoom_y
             else 1
         )
+        self._last_center = None
 
     def apply_frame(self, frame: np.ndarray, scene: Scene, index: int):
         increment_per_frame = 1 / (scene.length() * scene.clip.fps)
-        self.current_factor_x += increment_per_frame * (self.factor_x - 1)
-        self.current_factor_y += increment_per_frame * (self.factor_y - 1)
+        current_factor_x = 1 + index * increment_per_frame * (self.factor_x - 1)
+        current_factor_y = 1 + index * increment_per_frame * (self.factor_y - 1)
         (height, width) = frame.shape[:2]
 
         interpolation_multiplier = self.interpolation_multipliers[index]
         scaled = cv2.resize(
             frame,
             None,
-            fx=self.current_factor_x * interpolation_multiplier,
-            fy=self.current_factor_y * interpolation_multiplier,
+            fx=current_factor_x * interpolation_multiplier,
+            fy=current_factor_y * interpolation_multiplier,
             interpolation=cv2.INTER_LINEAR,
         )
-        # TODO: Fix to use face pos if enabled
-        center_on = None
-        if center_on == None:
-            center_on = (height / 2, width / 2)
-        else:
-            center_on = (center_on[1], center_on[0])
-        center_on = (
-            center_on[0] * self.current_factor_y,
-            center_on[1] * self.current_factor_x,
+
+        center = self.get_center(scene.frames[index])
+        center = (
+            center[1] * current_factor_y,
+            center[0] * current_factor_x,
         )
 
-        crop_from_y = int(max(0, center_on[0] - height / 2))
-        crop_to_y = int(min(height * self.current_factor_y, crop_from_y + height))
+        crop_from_y = int(max(0, center[0] - height / 2))
+        crop_to_y = int(min(height * current_factor_y, crop_from_y + height))
 
-        crop_from_x = int(max(0, center_on[1] - width / 2))
-        crop_to_x = int(min(width * self.current_factor_x, crop_from_x + width))
+        crop_from_x = int(max(0, center[1] - width / 2))
+        crop_to_x = int(min(width * current_factor_x, crop_from_x + width))
         cropped = scaled[crop_from_y:crop_to_y, crop_from_x:crop_to_x]
 
         # If image is smaller than before, pad with black
@@ -101,3 +99,13 @@ class Zoom(effect.ImageEffect):
             )
 
         return cropped
+
+    def get_center(self, current_frame: FullFrame):
+        (height, width) = current_frame.video_frame.shape[:2]
+        if self.center_on_face:
+            if len(current_frame.face_locations) > 0:
+                face = current_frame.face_locations[0]
+                return face_to_center(face)
+            elif self._last_center is not None:
+                return self._last_center
+        return (width // 2, height // 2)

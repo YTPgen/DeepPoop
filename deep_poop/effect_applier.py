@@ -26,6 +26,7 @@ class EffectApplier:
         easy_start: float = 0,
         min_effect_length: float = 1.0,
         max_simultaneous_effects=3,
+        workers=1,
     ):
         self.intensity = easy_start
         self.max_intensity = max_intensity
@@ -37,6 +38,7 @@ class EffectApplier:
         )
         self.last_effect_length = 0
         self.max_simultaneous_effects = max_simultaneous_effects
+        self.workers = workers
 
     def _set_next_effect_trigger_threshold(self):
         self._next_effect_intensity_threshold = random.random() * self.intensity
@@ -162,10 +164,13 @@ class EffectApplier:
             self._effects_to_apply.append(next_effect)
 
     def _apply_effect(self, scene: Scene, effect: Effect, duration: float) -> VideoClip:
+        print(f"INFO: Applying {effect.name} with length {duration}s")
         scene_length = scene.length()
         if duration >= scene_length:
             transformed_clip = effect.apply(
-                scene=scene, strength=self._choose_effect_strength()
+                scene=scene,
+                strength=self._choose_effect_strength(),
+                workers=self.workers,
             )
         else:
             effect_begin = random.uniform(0, scene_length - duration)
@@ -175,14 +180,15 @@ class EffectApplier:
                 start=effect_begin, end=effect_begin + duration
             )
             transformed_clip = effect.apply(
-                scene=effect_scene, strength=self._choose_effect_strength()
+                scene=effect_scene,
+                strength=self._choose_effect_strength(),
+                workers=self.workers,
             )
             scene.clip = combine_video_clips(
                 [scene_before.clip, transformed_clip, scene_after.clip]
             )
         if scene.clip is None:
             raise ValueError
-        print(f"INFO: Applied {effect.name} with length {duration}s")
         return transformed_clip
 
     def _choose_effect_strength(self):

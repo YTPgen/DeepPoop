@@ -21,12 +21,14 @@ class Generator:
         out_file (str): File name of produced video
         scene_threshold (float): Threshold at which to cut video into clips
         subscene_threshold (float): Threshold to cut clips into sub-clips
+        work_dir (str): Working directory for storing files such as analysis caches
         scene_min_len (int): Minimum length of scene in frames (Defaults to 600)
         subscene_min_len (int): Minimum length of subscene in frames (Defaults to 120)
         length (float): Lengths of desired video in seconds. If 'reuse' is set to False total length might shorter
         abruptness (float, optional): Probability to transition to new scene after sub-scene end (Defaults to 0.2)
         reuse (bool, optional): Toggles whether to re-use same scenes (Defaults to True)
         downscale (float, optional): Downscale factor when performing scene detection. If None detect value automatically (Defaults to None)
+        workers (int, optional): Amount of workers to process each effect (if effect allows it). A higher number could lead to faster generation (Defaults to 1)
     """
 
     def __init__(
@@ -36,6 +38,7 @@ class Generator:
         scene_threshold: float,
         subscene_threshold: float,
         length: float,
+        work_dir: str = "./work",
         scene_min_len: int = 600,
         subscene_min_len: int = 90,
         abruptness: float = 0.2,
@@ -43,6 +46,7 @@ class Generator:
         downscale: float = None,
         max_intensity=20,
         easy_start=0,
+        workers=1,
     ):
         self.video_file = video_file
         self.out_file = out_file
@@ -52,21 +56,24 @@ class Generator:
             scene_min_len=scene_min_len,
             subscene_min_len=subscene_min_len,
             downscale=downscale,
+            work_dir=os.path.join(work_dir, os.path.basename(video_file)),
         )
         self.length = length
         self._effect_applier = EffectApplier(
             max_intensity=max_intensity,
             easy_start=easy_start,
             effect_graph=EFFECT_GRAPH,
+            workers=workers,
         )
         self.reuse = reuse
         self.abruptness = abruptness
+        self.work_dir = work_dir
 
-    def ytp_clip_from_scene(self, scene: Scene):
-        if scene.frames == []:
-            scene.analyze_frames()
+    def ytp_clip_from_scene(self, scene: Scene, abruptness: int):
+        scene.analyze_frames()
+
         subscene = scene.subscene(
-            0, scene.length() - scene.length() * random.random() * self.abruptness
+            0, scene.length() * (1 - (abruptness * random.random()))
         )
         if subscene.clip is None or subscene.clip.audio is None:
             print(f"Subscene has corrupted clip data. Skipping...")
@@ -84,8 +91,8 @@ class Generator:
         )
         return new_clip
 
-    def _create_and_save_clip(self, scene: Scene, path: str):
-        new_clip = self.ytp_clip_from_scene(scene)
+    def _create_and_save_clip(self, scene: Scene, path: str, abruptness: int):
+        new_clip = self.ytp_clip_from_scene(scene, abruptness)
         if new_clip == None:
             return 0
         new_clip.write_videofile(path)
@@ -124,9 +131,21 @@ class Generator:
                         random.randint(0, len(scenes) - 1) if len(scenes) > 1 else 0
                     )
                     current_scene = scenes[next_i] if self.reuse else scenes.pop(next_i)
-                    clip_duration = self._create_and_save_clip(
-                        current_scene, os.path.join(tmpdir, f"{current_clip_index}.mp4")
-                    )
+                    duration_left = self.length - total_duration
+                    print(f"INFO: Duration left {duration_left}")
+                    if current_scene.length() > duration_left:
+                        current_scene = current_scene.subscene(0, duration_left)
+                        clip_duration = self._create_and_save_clip(
+                            current_scene,
+                            os.path.join(tmpdir, f"{current_clip_index}.mp4"),
+                            0,
+                        )
+                    else:
+                        clip_duration = self._create_and_save_clip(
+                            current_scene,
+                            os.path.join(tmpdir, f"{current_clip_index}.mp4"),
+                            self.abruptness,
+                        )
                     if clip_duration > 0:
                         total_duration += clip_duration
                         current_clip_index += 1

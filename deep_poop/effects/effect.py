@@ -117,7 +117,7 @@ class ImageEffect(Effect):
         """
         output_frames = []
         if workers > 1:
-            output_frames = self._parallel_apply(scene)
+            output_frames = self._parallel_apply(scene, workers)
         else:
             for i, frame in enumerate(scene.frames):
                 f = self.apply_frame(frame.video_frame, scene, i)
@@ -129,7 +129,7 @@ class ImageEffect(Effect):
     def _parallel_apply(self, scene: Scene, workers: int):
         manager = multiprocessing.Manager()
         result_list = manager.list()
-        for i in range(self.workers):
+        for i in range(workers):
             result_list.append([])
         jobs = []
 
@@ -143,7 +143,7 @@ class ImageEffect(Effect):
             result_list[worker_index] = processed_frames
 
         frames_per_worker = math.ceil(scene.frame_length() / workers)
-        for i in range(self.workers):
+        for i in range(workers):
             worker_start = i * frames_per_worker
             frames = scene.frames[worker_start : worker_start + frames_per_worker]
             p = multiprocessing.Process(
